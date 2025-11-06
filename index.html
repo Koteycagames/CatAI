@@ -673,7 +673,9 @@
                 return;
             }
             
-            chatData.messages.forEach(msg => {
+            // ИСПРАВЛЕНИЕ: chatData.messages - это объект (Object), а не массив (Array)
+            // Используем Object.values() для итерации
+            Object.values(chatData.messages).forEach(msg => {
                 appendMessage(msg.role, msg.content);
             });
         }
@@ -750,6 +752,9 @@
 
             const selectedModel = modelSelect.value;
             chatInput.value = '';
+            
+            // ИСПРАВЛЕНИЕ: Запоминаем ID чата в момент отправки
+            const chatIdForResponse = currentActiveChatId;
 
             const currentChatData = userChatsData[currentActiveChatId];
             const messages = currentChatData.messages || [];
@@ -773,10 +778,12 @@
             
             // Симуляция задержки ответа ИИ
             setTimeout(() => {
-                if (currentActiveChatId === chatId) { // Проверяем, в том ли мы чате
+                // ИСПРАВЛЕНИЕ: Была ошибка ReferenceError: 'chatId' не определен.
+                // Заменяем 'chatId' на 'chatIdForResponse'
+                if (currentActiveChatId === chatIdForResponse) { // Проверяем, в том ли мы чате
                     typingIndicator.classList.add('hidden');
                 }
-                getAIResponse(userInput, currentActiveChatId, selectedModel);
+                getAIResponse(userInput, chatIdForResponse, selectedModel);
             }, 1500);
         });
 
