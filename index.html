@@ -66,242 +66,77 @@
                                 placeholder="Пароль" value="password">
                         </div>
                     </div>
-
-                    <div>
-                        <button type="submit"
-                            class="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900">
-                            Войти
-                        </button>
-                    </div>
-                </form>
-                <p class="text-center text-sm text-gray-400">
-                    Нет аккаунта?
-                    <a href="#register" class="font-medium text-blue-400 hover:text-blue-300">
-                        Регистрация
-                    </a>
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <!-- ======================= -->
-    <!--    ЭКРАН РЕГИСТРАЦИИ    -->
-    <!-- ======================= -->
-    <section id="register" class="page hidden h-full">
-        <div class="flex items-center justify-center min-h-full px-4 py-12">
-            <div class="w-full max-w-md space-y-8">
-                <div>
-                    <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-white">
-                        Создать аккаунт CatAI
-                    </h2>
-                </div>
-                <form id="register-form" class="mt-8 space-y-6" action="#" method="POST">
-                    <div class="rounded-md shadow-sm space-y-3">
-                        <div>
-                            <label for="register-email" class="sr-only">Email</label>
-                            <input id="register-email" name="email" type="email" autocomplete="email" required
-                                class="relative block w-full appearance-none rounded-md border-0 bg-gray-700 px-3 py-3 text-white placeholder-gray-400 focus:z-10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm"
-                                placeholder="Email">
-                        </div>
-                        <div>
-                            <label for="register-password" class="sr-only">Пароль</label>
-                            <input id="register-password" name="password" type="password" required
-                                class="relative block w-full appearance-none rounded-md border-0 bg-gray-700 px-3 py-3 text-white placeholder-gray-400 focus:z-10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm"
-                                placeholder="Пароль">
-                        </div>
-                         <div>
-                            <label for="register-confirm-password" class="sr-only">Повторите пароль</label>
-                            <input id="register-confirm-password" name="confirm-password" type="password" required
-                                class="relative block w-full appearance-none rounded-md border-0 bg-gray-700 px-3 py-3 text-white placeholder-gray-400 focus:z-10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm"
-                                placeholder="Повторите пароль">
-                        </div>
-                    </div>
-
-                    <div>
-                        <button type="submit"
-                            class="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900">
-                            Зарегистрироваться
-                        </button>
-                    </div>
-                </form>
-                <p class="text-center text-sm text-gray-400">
-                    Уже есть аккаунт?
-                    <a href="#login" class="font-medium text-blue-400 hover:text-blue-300">
-                        Войти
-                    </a>
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <!-- ======================= -->
-    <!--       ЭКРАН ЧАТА        -->
-    <!-- ======================= -->
-    <section id="ai" class="page hidden h-full">
-        <div class="flex h-full">
-            <!-- Боковая панель (для похожести на ChatGPT) -->
-            <div class="hidden md:flex md:w-64 flex-col bg-gray-950 border-r border-gray-700">
-                <div class="flex h-full min-h-0 flex-col">
-                    <div class="flex-1 overflow-y-auto p-4">
-                        <!-- Кнопка нового чата -->
-                        <a href="#ai" id="new-chat-btn" class="flex items-center justify-between w-full px-3 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 mb-4">
-                            <span>Новый чат</span>
-                            <!-- Иконка "плюс" -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                            </svg>
-                        </a>
-                        
-                        <!-- Список прошлых чатов (будет заполнен JS) -->
-                        <nav id="chat-history-list" class="flex-1 space-y-1">
-                            <!-- Сюда JS добавит ссылки на чаты -->
-                        </nav>
-                    </div>
-                    <!-- Футер сайдбара -->
-                    <div class="border-t border-gray-700 p-4">
-                         <!-- == КНОПКА МОДЕЛИ == -->
-                         <a href="#" id="models-btn" class="flex w-full items-center px-3 py-2 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800 hover:text-white mb-2">
-                            <!-- Иконка "премиум" (бриллиант/звезда) -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                              <path fill-rule="evenodd" d="M5 2a1 1 0 00-1 1v1h1a1 1 0 010 2H4v1a1 1 0 001 1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1V9a1 1 0 011-1h2a1 1 0 001-1V6h-1a1 1 0 110-2h1V3a1 1 0 00-1-1H5zM2 13v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1H3a1 1 0 00-1 1zm14 0v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1h-3a1 1 0 00-1 1z" clip-rule="evenodd" />
-                            </svg>
-                            Модели
-                        </a>
-                         <!-- == /КНОПКА МОДЕЛИ == -->
-
-                         <a href="#login" id="logout-btn" class="flex w-full items-center px-3 py-2 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800 hover:text-white">
-                            <!-- Иконка выхода -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                              <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
-                            </svg>
-                            Выйти
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Основная область чата -->
-            <div class="flex flex-1 flex-col overflow-hidden">
-                <!-- Хедер (виден на мобильных) -->
-                <header class="flex md:hidden items-center justify-between border-b border-gray-700 bg-gray-900 px-4 py-3">
-                     <h1 class="text-lg font-semibold text-white">CatAI</h1>
-                     <a href="#login" class="text-gray-400 hover:text-white">
-                        <!-- Иконка выхода -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                     </a>
-                </header>
-
-                <!-- Контейнер сообщений -->
-                <main class="flex-1 overflow-y-auto" id="chat-messages">
-                    <!-- Сообщения будут добавляться сюда с помощью JavaScript. -->
-                </main>
-
-                <!-- Индикатор "печатает..." (скрыт по умолчанию) -->
-                <div id="typing-indicator" class="hidden px-4 py-2 text-sm text-gray-400">
-                    CatAI печатает...
-                </div>
-
-                <!-- Форма ввода сообщения -->
-                <footer class="p-4 bg-gray-900 border-t border-gray-700">
-                    <form id="chat-form" class="flex items-center space-x-3">
-                        <label for="chat-input" class="sr-only">Ваше сообщение</label>
-                        <input type="text" id="chat-input" autocomplete="off"
-                            class="flex-1 block w-full rounded-lg border-0 bg-gray-800 px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
-                            placeholder="Напишите что-нибудь для CatAI...">
-                        
-                        <!-- == КНОПКА ВЫБОРА МОДЕЛИ == -->
-                        <div class="relative flex-shrink-0">
-                            <label for="model-select" class="sr-only">Выбор модели</label>
-                            <!-- ИЗМЕНЕНО: Добавлен класс w-40, чтобы сделать меню шире -->
-                            <select id="model-select" name="model"
-                                class="h-12 w-40 appearance-none block rounded-lg border-0 bg-gray-800 pl-3 pr-8 py-3 text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm">
-                                <!-- ИЗМЕНЕНО: Обновлены модели + добавлены 'value' -->
-                                <option value="base">CatAI base</option>
-                                <option value="fast">CatAI Fast</option>
-                                <option value="pro">CatAI PRO</option>
-                            </select>
-                            <!-- Иконка стрелки для select -->
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.29a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                                </svg>
+                    <!-- Карточки моделей (СТАРЫЙ КОД УДАЛЕН) -->
+                    <!-- ================================== -->
+                    <!-- НОВЫЙ ИНТЕРАКТИВНЫЙ БЛОК ВЫБОРА -->
+                    <!-- ================================== -->
+                    <div class="mt-6 space-y-6">
+                        <!-- 1. Выбор Модели -->
+                        <fieldset>
+                            <legend class="text-base font-medium text-white">1. Выберите модель</legend>
+                            <div class="mt-4 space-y-4">
+                                <!-- Модель Base -->
+                                <div class="flex items-center">
+                                    <input id="model-base" name="model-selection" type="radio" value="base" class="h-4 w-4 text-blue-600 border-gray-600 focus:ring-blue-500 bg-gray-700">
+                                    <label for="model-base" class="ml-3 block text-sm font-medium text-gray-300">
+                                        CatAI base 🐈 <span class="text-gray-400">(Доступно)</span>
+                                    </label>
+                                </div>
+                                <!-- Модель Fast -->
+                                <div class="flex items-center">
+                                    <input id="model-fast" name="model-selection" type="radio" value="fast" class="h-4 w-4 text-blue-600 border-gray-600 focus:ring-blue-500 bg-gray-700">
+                                    <label for="model-fast" class="ml-3 block text-sm font-medium text-gray-300">
+                                        CatAI Fast ⚡ <span class="text-gray-400">(Доступно)</span>
+                                    </label>
+                                </div>
+                                <!-- Модель PRO -->
+                                <div class="flex items-center">
+                                    <input id="model-pro" name="model-selection" type="radio" value="pro" class="h-4 w-4 text-blue-600 border-gray-600 focus:ring-blue-500 bg-gray-700">
+                                    <label for="model-pro" class="ml-3 block text-sm font-medium text-gray-300">
+                                        CatAI PRO 🚀 <span class="text-yellow-400">(Требует подписки)</span>
+                                    </label>
+                                </div>
                             </div>
-                        </div>
-                        <!-- == /КНОПКА ВЫБОРА МОДЕЛИ == -->
+                        </fieldset>
 
-                        <button type="submit"
-                            class="inline-flex flex-shrink-0 h-12 w-12 items-center justify-center rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900">
-                            <!-- Иконка "отправить" (бумажный самолетик) -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009.175 16V4.697a1 1 0 00-1.169-1.409l-5 1.429zM10 4.697v11.304l5-1.429a1 1 0 00.707-1.707l-7-14z" />
-                            </svg>
-                            <span class="sr-only">Отправить</span>
-                        </button>
-                    </form>
-                    <p class="text-center text-xs text-gray-500 mt-3">
-                        CatAI. Ответы могут быть неточными.
-                    </p>
-                </footer>
-            </div>
-        </div>
-    </section>
-
-    <!-- ======================= -->
-    <!--     МОДАЛЬНОЕ ОКНО      -->
-    <!-- ======================= -->
-    <div id="models-modal" class="page hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <!-- Фон-оверлей -->
-            <div id="modal-backdrop" class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-
-            <!-- Контент модального окна -->
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-600 sm:mx-0 sm:h-10 sm:w-10">
-                            <!-- Иконка из кнопки "Модели" -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
-                              <path fill-rule="evenodd" d="M5 2a1 1 0 00-1 1v1h1a1 1 0 010 2H4v1a1 1 0 001 1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1V9a1 1 0 011-1h2a1 1 0 001-1V6h-1a1 1 0 110-2h1V3a1 1 0 00-1-1H5zM2 13v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1H3a1 1 0 00-1 1zm14 0v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1h-3a1 1 0 00-1 1z" clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-white" id="modal-title">
-                                Модели CatAI
-                            </h3>
-                            <div class="mt-2">
-                                <p class="text-sm text-gray-400">
-                                    Выберите модель, которая подходит под ваши задачи. PRO-модели требуют активной подписки.
-                                </p>
+                        <!-- 2. Выбор Лимита (Скрыт по умолчанию) -->
+                        <fieldset id="limit-selection-fieldset" class="hidden">
+                            <legend class="text-base font-medium text-white">2. Выберите лимит (для PRO)</legend>
+                            <div class="mt-4 grid grid-cols-3 gap-3">
+                                <!-- Используем radio-кнопки, стилизованные под кнопки -->
+                                <div>
+                                    <input type="radio" name="limit-selection" id="limit-1k" value="1k" class="sr-only peer">
+                                    <label for="limit-1k" class="block w-full text-center p-3 rounded-lg bg-gray-700 text-gray-300 cursor-pointer hover:bg-gray-600 peer-checked:bg-blue-600 peer-checked:text-white">1к</label>
+                                </div>
+                                <div>
+                                    <input type="radio" name="limit-selection" id="limit-3k" value="3k" class="sr-only peer">
+                                    <label for="limit-3k" class="block w-full text-center p-3 rounded-lg bg-gray-700 text-gray-300 cursor-pointer hover:bg-gray-600 peer-checked:bg-blue-600 peer-checked:text-white">3к</label>
+                                </div>
+                                <div>
+                                    <input type="radio" name="limit-selection" id="limit-5k" value="5k" class="sr-only peer">
+                                    <label for="limit-5k" class="block w-full text-center p-3 rounded-lg bg-gray-700 text-gray-300 cursor-pointer hover:bg-gray-600 peer-checked:bg-blue-600 peer-checked:text-white">5к</label>
+                                </div>
+                                <div>
+                                    <input type="radio" name="limit-selection" id="limit-10k" value="10k" class="sr-only peer">
+                                    <label for="limit-10k" class="block w-full text-center p-3 rounded-lg bg-gray-700 text-gray-300 cursor-pointer hover:bg-gray-600 peer-checked:bg-blue-600 peer-checked:text-white">10к</label>
+                                </div>
+                                <div>
+                                    <input type="radio" name="limit-selection" id="limit-30k" value="30k" class="sr-only peer">
+                                    <label for="limit-30k" class="block w-full text-center p-3 rounded-lg bg-gray-700 text-gray-300 cursor-pointer hover:bg-gray-600 peer-checked:bg-blue-600 peer-checked:text-white">30к</label>
+                                </div>
                             </div>
-                        </div>
+                        </fieldset>
                     </div>
-                    <!-- Карточки моделей -->
-                    <div class="mt-6 space-y-4">
-                        <!-- PRO Модель -->
-                        <div class="bg-gray-700 rounded-lg p-4 flex justify-between items-center">
-                            <div>
-                                <h4 class="font-semibold text-white">CatAI PRO 🚀</h4>
-                                <p class="text-sm text-gray-300">Лимит 10,000 символов, приоритетная поддержка.</p>
-                            </div>
-                            <button class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700" disabled>
-                                Скоро
-                            </button>
-                        </div>
-                         <!-- Fast Модель -->
-                        <div class="bg-gray-700 rounded-lg p-4 flex justify-between items-center opacity-70">
-                            <div>
-                                <h4 class="font-semibold text-white">CatAI Fast ⚡</h4>
-                                <p class="text-sm text-gray-300">Оптимизирована для быстрых ответов.</p>
-                            </div>
-                            <span class="text-sm text-gray-400">Доступно</span>
-                        </div>
-                    </div>
+                    <!-- ================================== -->
+                    <!-- КОНЕЦ НОВОГО БЛОКА -->
+                    <!-- ================================== -->
                 </div>
+                <!-- ИЗМЕНЕН ФУТЕР МОДАЛЬНОГО ОКНА -->
                 <div class="bg-gray-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-700">
-                    <button id="close-modal-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-gray-600 shadow-sm px-4 py-2 bg-gray-700 text-base font-medium text-white hover:bg-gray-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">
+                    <button id="purchase-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm" disabled>
+                        Оплатить (Скоро)
+                    </button>
+                    <button id="close-modal-btn" type="button" class="mt-3 sm:mt-0 w-full inline-flex justify-center rounded-md border border-gray-600 shadow-sm px-4 py-2 bg-gray-700 text-base font-medium text-white hover:bg-gray-600 focus:outline-none sm:w-auto sm:text-sm">
                         Закрыть
                     </button>
                 </div>
@@ -365,6 +200,13 @@
         const modelsModal = document.getElementById('models-modal');
         const closeModalBtn = document.getElementById('close-modal-btn');
         const modalBackdrop = document.getElementById('modal-backdrop');
+
+        // == НОВЫЕ ПЕРЕМЕННЫЕ ДЛЯ ЛОГИКИ МОДАЛЬНОГО ОКНА ==
+        const modelSelectionRadios = document.querySelectorAll('input[name="model-selection"]');
+        const limitSelectionFieldset = document.getElementById('limit-selection-fieldset');
+        const purchaseBtn = document.getElementById('purchase-btn');
+        const limitSelectionRadios = document.querySelectorAll('input[name="limit-selection"]');
+
 
         // Состояние приложения
         let currentUserId = null;
@@ -729,6 +571,13 @@
         modelsBtn.addEventListener('click', (e) => {
             e.preventDefault();
             modelsModal.classList.remove('hidden');
+            // Сброс состояния модального окна при открытии
+            limitSelectionFieldset.classList.add('hidden'); // Скрываем лимиты
+            purchaseBtn.disabled = true; // Отключаем кнопку
+            purchaseBtn.textContent = 'Оплатить (Скоро)';
+            // Сбрасываем выбор
+            modelSelectionRadios.forEach(radio => radio.checked = false);
+            limitSelectionRadios.forEach(radio => radio.checked = false);
         });
 
         closeModalBtn.addEventListener('click', () => {
@@ -737,6 +586,36 @@
 
         modalBackdrop.addEventListener('click', () => {
             modelsModal.classList.add('hidden');
+        });
+
+        // 5. == НОВАЯ ЛОГИКА: ПОКАЗАТЬ ЛИМИТЫ ПРИ ВЫБОРЕ PRO ==
+        modelSelectionRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const selectedModel = e.target.value;
+                if (selectedModel === 'pro') {
+                    // Показываем лимиты только для PRO
+                    limitSelectionFieldset.classList.remove('hidden');
+                    // Сброс кнопки, пока не выбран лимит
+                    purchaseBtn.disabled = true;
+                    purchaseBtn.textContent = 'Выберите лимит';
+                } else {
+                    // Скрываем лимиты для Base и Fast
+                    limitSelectionFieldset.classList.add('hidden');
+                    // "Покупка" для
+                    purchaseBtn.disabled = false; // (или true, если они бесплатные)
+                    purchaseBtn.textContent = 'Выбрать'; // (пока просто "Выбрать")
+                }
+            });
+        });
+
+        // 6. == НОВАЯ ЛОГИКА: АКТИВАЦИЯ КНОПКИ ПОКУПКИ (ПОКА ОТКЛЮЧЕНА) ==
+        limitSelectionRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                // Как только лимит выбран, кнопка покупки "активируется"
+                // purchaseBtn.disabled = false; // <-- РАЗБЛОКИРУЙ ЭТО, КОГДА БУДЕТ ГОТОВА ОПЛАТА
+                purchaseBtn.textContent = 'Оплатить (Скоро)';
+                purchaseBtn.disabled = true; // Оставляем отключенной по твоей просьбе
+            });
         });
 
     </script>
