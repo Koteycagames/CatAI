@@ -204,10 +204,13 @@
                         <!-- == КНОПКА ВЫБОРА МОДЕЛИ == -->
                         <div class="relative flex-shrink-0">
                             <label for="model-select" class="sr-only">Выбор модели</label>
+                            <!-- ИЗМЕНЕНО: Добавлен класс w-40, чтобы сделать меню шире -->
                             <select id="model-select" name="model"
-                                class="h-12 appearance-none block w-full rounded-lg border-0 bg-gray-800 pl-3 pr-8 py-3 text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm">
-                                <option>CatAI</option>
-                                <option>CatAI Pro</option>
+                                class="h-12 w-40 appearance-none block rounded-lg border-0 bg-gray-800 pl-3 pr-8 py-3 text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm">
+                                <!-- ИЗМЕНЕНО: Обновлены модели -->
+                                <option>CatAI base</option>
+                                <option>CatAI Fast</option>
+                                <option>CatAI PRO</option>
                             </select>
                             <!-- Иконка стрелки для select -->
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
@@ -530,13 +533,20 @@
             const lowerInput = userInput.toLowerCase();
             let response = '';
 
-            // <-- ДОБАВЛЕНО: Проверяем, какая модель выбрана
             const selectedModel = modelSelect.value; 
-            let modelPrefix = '(CatAI): ';
+            let modelPrefix = '';
 
-            if (selectedModel === 'CatAI Pro') {
-                modelPrefix = '(CatAI Pro 🚀): ';
+            // <-- ИЗМЕНЕНО: Логика префиксов для новых моделей
+            if (selectedModel === 'CatAI base') {
+                modelPrefix = '(CatAI base 🐈): ';
+            } else if (selectedModel === 'CatAI Fast') {
+                modelPrefix = '(CatAI Fast ⚡): ';
+            } else if (selectedModel === 'CatAI PRO') {
+                modelPrefix = '(CatAI PRO 🚀): ';
+            } else {
+                modelPrefix = `(${selectedModel}): `; // Запасной вариант
             }
+
 
             if (lowerInput.includes('привет')) {
                 response = modelPrefix + 'Мяу! Привет. Чем могу быть полезен?';
