@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="ru" class="h-full">
 <head>
     <meta charset="UTF-8">
@@ -159,7 +159,7 @@
                     </div>
                     <!-- Футер сайдбара -->
                     <div class="border-t border-gray-700 p-4">
-                         <a href="#login" class="flex w-full items-center px-3 py-2 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800 hover:text-white">
+                         <a href="#login" id="logout-btn" class="flex w-full items-center px-3 py-2 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800 hover:text-white">
                             <!-- Иконка выхода -->
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                               <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
@@ -217,309 +217,374 @@
         </div>
     </section>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
+    <!-- 
+      ========================================
+      FIREBASE SDKs
+      ========================================
+      Импортируем модули Firebase, которые нам нужны
+    -->
+    <script type="module">
+        // Импорты Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
 
-            // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И DOM ЭЛЕМЕНТЫ ===
-            const pages = document.querySelectorAll('.page');
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
-            const chatForm = document.getElementById('chat-form');
-            const chatInput = document.getElementById('chat-input');
-            const chatMessages = document.getElementById('chat-messages');
-            const typingIndicator = document.getElementById('typing-indicator');
-            const newChatBtn = document.getElementById('new-chat-btn');
-            const chatHistoryList = document.getElementById('chat-history-list');
+        // Твоя конфигурация Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCcgLac2riawIGPHsdkXLOeFTEY_TUZX_s",
+            authDomain: "catai-1624d.firebaseapp.com",
+            databaseURL: "https://catai-1624d-default-rtdb.firebaseio.com",
+            projectId: "catai-1624d",
+            storageBucket: "catai-1624d.firebasestorage.app",
+            messagingSenderId: "565260079109",
+            appId: "1:565260079109:web:fd10c337a424555c0b0c6c"
+        };
 
-            // Ключи для localStorage
-            const CHATS_KEY = 'catai_chats';
-            const ACTIVE_CHAT_KEY = 'catai_activeChatId';
-            const WELCOME_MESSAGE = 'Привет! Я CatAI. Чем могу помочь?';
+        // Инициализация Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
 
-            // === ЛОГИКА МАРШРУТИЗАЦИИ (ПЕРЕКЛЮЧЕНИЯ СТРАНИЦ) ===
+        // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
+        const pages = document.querySelectorAll('.page');
+        
+        // Формы
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const loginEmailInput = document.getElementById('login-email');
+        const loginPasswordInput = document.getElementById('login-password');
+        const registerEmailInput = document.getElementById('register-email');
+        const registerPasswordInput = document.getElementById('register-password');
 
-            function updateView() {
-                const hash = window.location.hash || '#login'; 
-                
-                pages.forEach(page => page.classList.add('hidden'));
+        // Чат
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const newChatBtn = document.getElementById('new-chat-btn');
+        const chatHistoryList = document.getElementById('chat-history-list');
+        const logoutBtn = document.getElementById('logout-btn');
 
-                const activePage = document.querySelector(hash);
-                if (activePage) {
-                    activePage.classList.remove('hidden');
-                    
-                    if (hash === '#ai') {
-                        // При переходе в чат, загружаем историю
-                        loadChatApp();
-                    } else if (hash === '#login') {
-                        // При выходе сбрасываем активный чат
-                        localStorage.removeItem(ACTIVE_CHAT_KEY);
-                    }
-                } else {
-                    document.querySelector('#login').classList.remove('hidden');
-                }
+        // Состояние приложения
+        let currentUserId = null;
+        let userChatsData = {}; // Кэш данных из RTDB
+        let currentActiveChatId = null;
+        let chatsListener = null; // Хранит функцию отписки от onValue
+
+        const WELCOME_MESSAGE = 'Привет! Я CatAI. Чем могу помочь?';
+
+        // === ЛОГИКА МАРШРУТИЗАЦИИ (ПЕРЕКЛЮЧЕНИЯ СТРАНИЦ) ===
+
+        function updateView() {
+            const hash = window.location.hash || (currentUserId ? '#ai' : '#login');
+            
+            pages.forEach(page => page.classList.add('hidden'));
+
+            const activePage = document.querySelector(hash);
+            if (activePage) {
+                activePage.classList.remove('hidden');
+            } else {
+                document.querySelector('#login').classList.remove('hidden');
             }
+        }
+        window.addEventListener('hashchange', updateView);
 
-            // Слушаем изменения хеша в URL
-            window.addEventListener('hashchange', updateView);
-            // Вызываем updateView при первой загрузке
+        // === ГЛАВНЫЙ СЛУШАТЕЛЬ АУТЕНТИФИКАЦИИ ===
+        // Это ядро приложения. Он решает, что показывать: логин или чат.
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Пользователь вошел в систему
+                currentUserId = user.uid;
+                if (window.location.hash !== '#ai') {
+                    window.location.hash = '#ai';
+                }
+                setupChatListeners(currentUserId); // Запускаем realtime-слушатель
+            } else {
+                // Пользователь вышел
+                currentUserId = null;
+                if (window.location.hash !== '#login' && window.location.hash !== '#register') {
+                    window.location.hash = '#login';
+                }
+                cleanupChatListeners(); // Отключаем realtime-слушатель
+                chatHistoryList.innerHTML = '';
+                chatMessages.innerHTML = '';
+            }
             updateView();
+        });
 
-            // === ЛОГИКА ФОРМ ВХОДА И РЕГИСТРАЦИИ ===
+        // === ЛОГИКА ФОРМ ВХОДА И РЕГИСТРАЦИИ (FIREBASE) ===
 
-            loginForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                console.log('Попытка входа...');
-                window.location.hash = '#ai';
-            });
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = loginEmailInput.value;
+            const password = loginPasswordInput.value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // onAuthStateChanged сам перекинет нас на #ai
+            } catch (error) {
+                alert("Ошибка входа: " + error.message);
+            }
+        });
 
-            registerForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                console.log('Попытка регистрации...');
-                // Имитация модального окна
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = registerEmailInput.value;
+            const password = registerPasswordInput.value;
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                // onAuthStateChanged поймает нового юзера, но мы
+                // перекинем его на логин, чтобы он вошел сам.
                 alert('Регистрация прошла успешно! Теперь вы можете войти.');
                 window.location.hash = '#login';
-            });
-
-
-            // === ЛОГИКА ХРАНИЛИЩА (localStorage) ===
-
-            /** Получает все чаты из localStorage */
-            function getChats() {
-                return JSON.parse(localStorage.getItem(CHATS_KEY)) || [];
+            } catch (error) {
+                alert("Ошибка регистрации: " + error.message);
             }
-
-            /** Сохраняет все чаты в localStorage */
-            function saveChats(chats) {
-                localStorage.setItem(CHATS_KEY, JSON.stringify(chats));
-            }
-
-            /** Получает ID активного чата */
-            function getActiveChatId() {
-                return localStorage.getItem(ACTIVE_CHAT_KEY);
-            }
-
-            /** Устанавливает ID активного чата */
-            function setActiveChatId(id) {
-                localStorage.setItem(ACTIVE_CHAT_KEY, id);
-            }
-
-            /** Сохраняет одно сообщение в активный чат */
-            function saveMessage(chatId, text, sender) {
-                const chats = getChats();
-                const chat = chats.find(c => c.id === chatId);
-                if (chat) {
-                    chat.messages.push({ sender, text });
-                    saveChats(chats);
-                }
-            }
-            
-            /** Обновляет заголовок чата */
-            function updateChatTitle(chatId, newTitle) {
-                 const chats = getChats();
-                 const chat = chats.find(c => c.id === chatId);
-                 if(chat) {
-                    chat.title = newTitle;
-                    saveChats(chats);
-                    renderSidebar(chats, chatId); // Перерисовываем сайдбар с новым заголовком
-                 }
-            }
-
-            // === ЛОГИКА ЧАТА (РЕНДЕРИНГ) ===
-
-            /** Запускает приложение чата: загружает чаты, сайдбар и активный чат */
-            function loadChatApp() {
-                let chats = getChats();
-                let activeId = getActiveChatId();
-
-                // Если чатов нет, создаем первый
-                if (chats.length === 0) {
-                    const newId = 'chat_' + Date.now();
-                    const newChat = { 
-                        id: newId, 
-                        title: 'Новый чат', 
-                        messages: [{ sender: 'ai', text: WELCOME_MESSAGE }] 
-                    };
-                    chats = [newChat];
-                    activeId = newId;
-                    saveChats(chats);
-                    setActiveChatId(activeId);
-                }
-
-                if (!activeId || !chats.find(c => c.id === activeId)) {
-                    activeId = chats[0].id;
-                    setActiveChatId(activeId);
-                }
-
-                renderSidebar(chats, activeId);
-                renderChat(activeId);
-            }
-
-            /** Отрисовывает список чатов в сайдбаре */
-            function renderSidebar(chats, activeId) {
-                chatHistoryList.innerHTML = '';
-                chats.forEach(chat => {
-                    const isActive = chat.id === activeId;
-                    const link = document.createElement('a');
-                    link.href = '#ai'; // Исправлено: не #, а #ai
-                    link.dataset.chatId = chat.id;
-                    link.textContent = chat.title;
-                    link.className = `block truncate px-3 py-2 text-sm font-medium rounded-md ${
-                        isActive 
-                        ? 'text-white bg-gray-800' 
-                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                    }`;
-                    chatHistoryList.appendChild(link);
-                });
-            }
-
-            /** Отрисовывает сообщения активного чата */
-            function renderChat(chatId) {
-                const chat = getChats().find(c => c.id === chatId);
-                chatMessages.innerHTML = ''; // Очищаем чат
-                
-                if (chat) {
-                    chat.messages.forEach(message => {
-                        addMessageToDOM(message.text, message.sender);
-                    });
-                    setActiveChatId(chatId);
-                    // Обновляем сайдбар, чтобы подсветить активный чат
-                    renderSidebar(getChats(), chatId);
-                }
-            }
-
-            /** Добавляет ОДНО сообщение в DOM (в окно чата) */
-            function addMessageToDOM(text, sender) {
-                const messageElement = document.createElement('div');
-                messageElement.classList.add('message', 'p-4', 'max-w-3xl', 'mx-auto');
-
-                let content = '';
-
-                if (sender === 'ai') {
-                    messageElement.classList.add('bg-gray-800'); 
-                    content = `
-                        <div class="flex items-start space-x-3">
-                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm">C</div>
-                            <div class="flex-1">
-                                <p class="font-semibold">CatAI</p>
-                                <p class="text-gray-300">${text}</p>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    content = `
-                        <div class="flex items-start space-x-3">
-                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center font-bold text-sm">U</div>
-                            <div class="flex-1">
-                                <p class="font-semibold">Вы</p>
-                                <p class="text-white">${text}</p>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                messageElement.innerHTML = content;
-                chatMessages.appendChild(messageElement);
-                chatMessages.scrollTop = chatMessages.scrollHeight; // Автопрокрутка
-            }
-            
-            /** Генерирует простой ответ от ИИ */
-            function getAIResponse(userInput, chatId) { // <-- 1. Принимаем ID чата
-                const lowerInput = userInput.toLowerCase();
-                let response = '';
-
-                if (lowerInput.includes('привет')) {
-                    response = 'Мяу! Привет. Чем могу быть полезен?';
-                } else if (lowerInput.includes('как дела')) {
-                    response = 'Я CatAI, и у меня все в порядке. А у вас?';
-                } else if (lowerInput.includes('пока')) {
-                    response = 'До встречи! Был рад пообщаться. Мяу!';
-                } else if (lowerInput.includes('котик') || lowerInput.includes('кошка')) {
-                    response = 'Я очень люблю котиков! Мррр...';
-                } else {
-                    response = 'Извините, я CatAI и не могу обработать этот запрос. Я еще учусь. Попробуйте спросить что-нибудь другое.';
-                }
-
-                // 2. Сразу сохраняем в правильный чат в localStorage
-                saveMessage(chatId, response, 'ai');
-
-                // 3. Проверяем, какой чат активен СЕЙЧАС
-                const currentActiveId = getActiveChatId();
-
-                // 4. Показываем ответ в DOM, только если пользователь не переключил чат
-                if (chatId === currentActiveId) {
-                    typingIndicator.classList.add('hidden');
-                    addMessageToDOM(response, 'ai');
-                }
-                
-                // Старое сохранение убираем, так как мы уже сохранили выше
-                // saveMessage(getActiveChatId(), response, 'ai'); // <-- УДАЛЕНО
-            }
-
-
-            // === ОБРАБОТЧИКИ СОБЫТИЙ ===
-
-            // 1. Отправка формы чата
-            chatForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const messageText = chatInput.value.trim();
-                const activeId = getActiveChatId();
-
-                if (messageText && activeId) {
-                    // 1. Добавить в DOM
-                    addMessageToDOM(messageText, 'user');
-                    // 2. Сохранить в localStorage
-                    saveMessage(activeId, messageText, 'user');
-                    // 3. Очистить поле ввода
-                    chatInput.value = '';
-                    
-                    // 4. Проверить, не нужно ли обновить заголовок чата
-                    const chat = getChats().find(c => c.id === activeId);
-                    // Если это первое сообщение пользователя (второе в чате после приветствия)
-                    if (chat && chat.messages.length === 2) { 
-                        const newTitle = messageText.length > 25 ? messageText.substring(0, 25) + '...' : messageText;
-                        updateChatTitle(activeId, newTitle);
-                    }
-                    
-                    // 5. Показать индикатор "печатает"
-                    typingIndicator.classList.remove('hidden');
-                    // 6. Сгенерировать ответ ИИ с задержкой, передав ID чата
-                    setTimeout(getAIResponse, 1500, messageText, activeId); // <-- Передаем activeId
-                }
-            });
-            
-            // 2. Нажатие кнопки "Новый чат"
-            newChatBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                
-                const chats = getChats();
-                const newId = 'chat_' + Date.now();
-                const newChat = { 
-                    id: newId, 
-                    title: 'Новый чат', 
-                    messages: [{ sender: 'ai', text: WELCOME_MESSAGE }] 
-                };
-                
-                chats.push(newChat);
-                saveChats(chats);
-                setActiveChatId(newId);
-                
-                renderSidebar(chats, newId);
-                renderChat(newId);
-                typingIndicator.classList.add('hidden'); // <-- Добавлено: скрыть индикатор
-            });
-            
-            // 3. Нажатие на чат в истории (делегирование событий)
-            chatHistoryList.addEventListener('click', (e) => {
-                const link = e.target.closest('a[data-chat-id]');
-                if (link) {
-                    e.preventDefault();
-                    const chatId = link.dataset.chatId;
-                    renderChat(chatId);
-                    typingIndicator.classList.add('hidden'); // <-- Добавлено: скрыть индикатор
-                }
-            });
-
         });
+
+        logoutBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await signOut(auth);
+            // onAuthStateChanged сам перекинет на #login
+        });
+
+
+        // === ЛОГИКА FIREBASE REALTIME DATABASE ===
+
+        /** Запускает onValue слушатель для чатов пользователя */
+        function setupChatListeners(uid) {
+            cleanupChatListeners(); // Очищаем старый, если есть
+            
+            // ИСПРАВЛЕНО: Убраны лишние кавычки в пути к ref. Было 'users/'' + uid + ''/chats'
+            const chatsRef = ref(db, 'users/' + uid + '/chats');
+            
+            // onValue будет срабатывать КАЖДЫЙ РАЗ, когда данные меняются в RTDB
+            chatsListener = onValue(chatsRef, (snapshot) => {
+                userChatsData = snapshot.val() || {};
+                
+                // Если у пользователя нет чатов, создаем первый
+                if (Object.keys(userChatsData).length === 0) {
+                    createNewChat(); // Он создаст чат, и onValue вызовется СНОВА
+                    return;
+                }
+
+                // Проверяем, валиден ли активный чат
+                if (!currentActiveChatId || !userChatsData[currentActiveChatId]) {
+                    // Если нет, берем первый из списка
+                    currentActiveChatId = Object.keys(userChatsData)[0];
+                }
+
+                // Перерисовываем интерфейс с новыми данными
+                renderSidebar(userChatsData, currentActiveChatId);
+                renderChat(currentActiveChatId);
+            });
+        }
+
+        /** Отключает onValue слушатель */
+        function cleanupChatListeners() {
+            if (chatsListener) {
+                chatsListener(); // Это функция отписки, которую возвращает onValue
+                chatsListener = null;
+            }
+            userChatsData = {};
+        }
+
+        /** Создает новый чат в RTDB */
+        async function createNewChat() {
+            if (!currentUserId) return;
+            
+            const chatsRef = ref(db, `users/${currentUserId}/chats`);
+            const newChatRef = push(chatsRef); // Генерируем ID для чата
+
+            // Создаем приветственное сообщение
+            const messagesRef = ref(db, `users/${currentUserId}/chats/${newChatRef.key}/messages`);
+            const firstMessageRef = push(messagesRef); // Генерируем ID для сообщения
+            
+            // Записываем и сообщение, и заголовок чата
+            await set(firstMessageRef, { sender: 'ai', text: WELCOME_MESSAGE });
+            await set(ref(db, `users/${currentUserId}/chats/${newChatRef.key}/title`), 'Новый чат');
+
+            // Устанавливаем новый чат как активный
+            currentActiveChatId = newChatRef.key;
+            // onValue listener сам поймает это изменение и все перерисует.
+        }
+
+        // === ЛОГИКА ЧАТА (РЕНДЕРИНГ) ===
+        // Эти функции теперь только рисуют. Они не хранят и не читают,
+        // этим занимается onValue.
+
+        /** Отрисовывает список чатов в сайдбаре */
+        function renderSidebar(chats, activeId) {
+            chatHistoryList.innerHTML = '';
+            // chats - это объект { chatId1: {title: ...}, chatId2: {title: ...} }
+            Object.keys(chats).forEach(chatId => {
+                const chat = chats[chatId];
+                if (!chat) return; // На всякий случай
+
+                const isActive = chatId === activeId;
+                const link = document.createElement('a');
+                link.href = '#ai';
+                link.dataset.chatId = chatId; // Используем ID из Firebase
+                link.textContent = chat.title || 'Чат без имени';
+                link.className = `block truncate px-3 py-2 text-sm font-medium rounded-md ${
+                    isActive 
+                    ? 'text-white bg-gray-800' 
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                }`;
+                chatHistoryList.appendChild(link);
+            });
+        }
+
+        /** Отрисовывает сообщения активного чата */
+        function renderChat(chatId) {
+            if (!chatId || !userChatsData[chatId]) {
+                chatMessages.innerHTML = '<p class="p-4 text-gray-500">Выберите чат или создайте новый.</p>';
+                return;
+            }
+            
+            currentActiveChatId = chatId; // Обновляем глобальный ID
+            const chat = userChatsData[chatId];
+            chatMessages.innerHTML = ''; // Очищаем чат
+            
+            if (chat.messages) {
+                // chat.messages - это объект { msgId1: {...}, msgId2: {...} }
+                // RTDB по-умолчанию хранит их в хронологическом порядке
+                Object.values(chat.messages).forEach(message => {
+                    addMessageToDOM(message.text, message.sender);
+                });
+            } else {
+                // Если чат есть, а сообщений нет (редкий случай)
+                addMessageToDOM(WELCOME_MESSAGE, 'ai');
+            }
+            
+            // Обновляем сайдбар, чтобы подсветить активный чат
+            renderSidebar(userChatsData, chatId);
+        }
+
+        /** Добавляет ОДНО сообщение в DOM (в окно чата) */
+        function addMessageToDOM(text, sender) {
+            const messageElement = document.createElement('div');
+            // ... (весь тот же HTML-контент, что и в прошлой версии) ...
+            messageElement.classList.add('message', 'p-4', 'max-w-3xl', 'mx-auto');
+
+            let content = '';
+
+            if (sender === 'ai') {
+                messageElement.classList.add('bg-gray-800'); 
+                content = `
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm">C</div>
+                        <div class="flex-1">
+                            <p class="font-semibold">CatAI</p>
+                            <p class="text-gray-300">${text}</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                content = `
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center font-bold text-sm">U</div>
+                        <div class="flex-1">
+                            <p class="font-semibold">Вы</p>
+                            <p class="text-white">${text}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            messageElement.innerHTML = content;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Автопрокрутка
+        }
+        
+        /** Генерирует и СОХРАНЯЕТ ответ от ИИ */
+        async function getAIResponse(userInput, chatId) {
+            const lowerInput = userInput.toLowerCase();
+            let response = '';
+
+            if (lowerInput.includes('привет')) {
+                response = 'Мяу! Привет. Чем могу быть полезен?';
+            } else if (lowerInput.includes('как дела')) {
+                response = 'Я CatAI, и у меня все в порядке. А у вас?';
+            } else if (lowerInput.includes('пока')) {
+                response = 'До встречи! Был рад пообщаться. Мяу!';
+            } else if (lowerInput.includes('котик') || lowerInput.includes('кошка')) {
+                response = 'Я очень люблю котиков! Мррр...';
+            } else {
+                response = 'Извините, я CatAI и не могу обработать этот запрос. Я еще учусь. Попробуйте спросить что-нибудь другое.';
+            }
+
+            // Просто записываем ответ в RTDB. onValue его поймает и отрисует.
+            if (currentUserId && chatId) {
+                const messagesRef = ref(db, `users/${currentUserId}/chats/${chatId}/messages`);
+                const newMessageRef = push(messagesRef);
+                await set(newMessageRef, { sender: 'ai', text: response });
+            }
+
+            // Скрываем индикатор печати (только если чат все еще активен)
+            if (chatId === currentActiveChatId) {
+                typingIndicator.classList.add('hidden');
+            }
+        }
+
+
+        // === ОБРАБОТЧИКИ СОБЫТИЙ ===
+
+        // 1. Отправка формы чата
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageText = chatInput.value.trim();
+            const activeId = currentActiveChatId;
+
+            if (messageText && activeId && currentUserId) {
+                // 1. Оптимистично очистить поле ввода
+                chatInput.value = '';
+                
+                // 2. Сохранить сообщение пользователя в RTDB
+                const messagesRef = ref(db, `users/${currentUserId}/chats/${activeId}/messages`);
+                const newMessageRef = push(messagesRef);
+                await set(newMessageRef, { sender: 'user', text: messageText });
+                // onValue поймает это и отрисует.
+                
+                // 3. Проверить, не нужно ли обновить заголовок чата
+                const chat = userChatsData[activeId];
+                const messageCount = chat.messages ? Object.keys(chat.messages).length : 0;
+                
+                // Если это первое сообщение пользователя (второе в чате после приветствия ИИ)
+                if (messageCount === 1) { 
+                    const newTitle = messageText.length > 25 ? messageText.substring(0, 25) + '...' : messageText;
+                    // Сохраняем заголовок в RTDB
+                    await set(ref(db, `users/${currentUserId}/chats/${activeId}/title`), newTitle);
+                    // onValue поймает и это.
+                }
+                
+                // 4. Показать индикатор "печатает"
+                typingIndicator.classList.remove('hidden');
+
+                // 5. Сгенерировать ответ ИИ (он сам сохранится в RTDB)
+                setTimeout(getAIResponse, 1500, messageText, activeId);
+            }
+        });
+        
+        // 2. Нажатие кнопки "Новый чат"
+        newChatBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            createNewChat(); // Просто создаем новый чат. onValue сделает остальное.
+        });
+        
+        // 3. Нажатие на чат в истории (делегирование событий)
+        chatHistoryList.addEventListener('click', (e) => {
+            const link = e.target.closest('a[data-chat-id]');
+            if (link) {
+                e.preventDefault();
+                const chatId = link.dataset.chatId;
+                if (chatId !== currentActiveChatId) {
+                    renderChat(chatId); // Просто перерисовываем, данные уже есть
+                    typingIndicator.classList.add('hidden');
+                }
+            }
+        });
+
     </script>
 
 </body>
