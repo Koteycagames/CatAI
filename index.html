@@ -200,8 +200,26 @@
                         <input type="text" id="chat-input" autocomplete="off"
                             class="flex-1 block w-full rounded-lg border-0 bg-gray-800 px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                             placeholder="Напишите что-нибудь для CatAI...">
+                        
+                        <!-- == КНОПКА ВЫБОРА МОДЕЛИ == -->
+                        <div class="relative flex-shrink-0">
+                            <label for="model-select" class="sr-only">Выбор модели</label>
+                            <select id="model-select" name="model"
+                                class="h-12 appearance-none block w-full rounded-lg border-0 bg-gray-800 pl-3 pr-8 py-3 text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm">
+                                <option>CatAI</option>
+                                <option>CatAI Pro</option>
+                            </select>
+                            <!-- Иконка стрелки для select -->
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.29a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+                        <!-- == /КНОПКА ВЫБОРА МОДЕЛИ == -->
+
                         <button type="submit"
-                            class="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900">
+                            class="inline-flex flex-shrink-0 h-12 w-12 items-center justify-center rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900">
                             <!-- Иконка "отправить" (бумажный самолетик) -->
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
                               <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009.175 16V4.697a1 1 0 00-1.169-1.409l-5 1.429zM10 4.697v11.304l5-1.429a1 1 0 00.707-1.707l-7-14z" />
@@ -260,6 +278,7 @@
         // Чат
         const chatForm = document.getElementById('chat-form');
         const chatInput = document.getElementById('chat-input');
+        const modelSelect = document.getElementById('model-select'); // <-- ДОБАВЛЕНО
         const chatMessages = document.getElementById('chat-messages');
         const typingIndicator = document.getElementById('typing-indicator');
         const newChatBtn = document.getElementById('new-chat-btn');
@@ -511,16 +530,24 @@
             const lowerInput = userInput.toLowerCase();
             let response = '';
 
+            // <-- ДОБАВЛЕНО: Проверяем, какая модель выбрана
+            const selectedModel = modelSelect.value; 
+            let modelPrefix = '(CatAI): ';
+
+            if (selectedModel === 'CatAI Pro') {
+                modelPrefix = '(CatAI Pro 🚀): ';
+            }
+
             if (lowerInput.includes('привет')) {
-                response = 'Мяу! Привет. Чем могу быть полезен?';
+                response = modelPrefix + 'Мяу! Привет. Чем могу быть полезен?';
             } else if (lowerInput.includes('как дела')) {
-                response = 'Я CatAI, и у меня все в порядке. А у вас?';
+                response = modelPrefix + 'Я CatAI, и у меня все в порядке. А у вас?';
             } else if (lowerInput.includes('пока')) {
-                response = 'До встречи! Был рад пообщаться. Мяу!';
+                response = modelPrefix + 'До встречи! Был рад пообщаться. Мяу!';
             } else if (lowerInput.includes('котик') || lowerInput.includes('кошка')) {
-                response = 'Я очень люблю котиков! Мррр...';
+                response = modelPrefix + 'Я очень люблю котиков! Мррр...';
             } else {
-                response = 'Извините, я CatAI и не могу обработать этот запрос. Я еще учусь. Попробуйте спросить что-нибудь другое.';
+                response = modelPrefix + 'Извините, я CatAI и не могу обработать этот запрос. Я еще учусь. Попробуйте спросить что-нибудь другое.';
             }
 
             // Просто записываем ответ в RTDB. onValue его поймает и отрисует.
