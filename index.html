@@ -159,6 +159,16 @@
                     </div>
                     <!-- Футер сайдбара -->
                     <div class="border-t border-gray-700 p-4">
+                         <!-- == КНОПКА МОДЕЛИ == -->
+                         <a href="#" id="models-btn" class="flex w-full items-center px-3 py-2 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800 hover:text-white mb-2">
+                            <!-- Иконка "премиум" (бриллиант/звезда) -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M5 2a1 1 0 00-1 1v1h1a1 1 0 010 2H4v1a1 1 0 001 1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1V9a1 1 0 011-1h2a1 1 0 001-1V6h-1a1 1 0 110-2h1V3a1 1 0 00-1-1H5zM2 13v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1H3a1 1 0 00-1 1zm14 0v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1h-3a1 1 0 00-1 1z" clip-rule="evenodd" />
+                            </svg>
+                            Модели
+                        </a>
+                         <!-- == /КНОПКА МОДЕЛИ == -->
+
                          <a href="#login" id="logout-btn" class="flex w-full items-center px-3 py-2 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800 hover:text-white">
                             <!-- Иконка выхода -->
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -207,10 +217,10 @@
                             <!-- ИЗМЕНЕНО: Добавлен класс w-40, чтобы сделать меню шире -->
                             <select id="model-select" name="model"
                                 class="h-12 w-40 appearance-none block rounded-lg border-0 bg-gray-800 pl-3 pr-8 py-3 text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm">
-                                <!-- ИЗМЕНЕНО: Обновлены модели -->
-                                <option>CatAI base</option>
-                                <option>CatAI Fast</option>
-                                <option>CatAI PRO</option>
+                                <!-- ИЗМЕНЕНО: Обновлены модели + добавлены 'value' -->
+                                <option value="base">CatAI base</option>
+                                <option value="fast">CatAI Fast</option>
+                                <option value="pro">CatAI PRO</option>
                             </select>
                             <!-- Иконка стрелки для select -->
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
@@ -237,6 +247,68 @@
             </div>
         </div>
     </section>
+
+    <!-- ======================= -->
+    <!--     МОДАЛЬНОЕ ОКНО      -->
+    <!-- ======================= -->
+    <div id="models-modal" class="page hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Фон-оверлей -->
+            <div id="modal-backdrop" class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+            <!-- Контент модального окна -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-600 sm:mx-0 sm:h-10 sm:w-10">
+                            <!-- Иконка из кнопки "Модели" -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M5 2a1 1 0 00-1 1v1h1a1 1 0 010 2H4v1a1 1 0 001 1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1V9a1 1 0 011-1h2a1 1 0 001-1V6h-1a1 1 0 110-2h1V3a1 1 0 00-1-1H5zM2 13v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1H3a1 1 0 00-1 1zm14 0v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1h-3a1 1 0 00-1 1z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-white" id="modal-title">
+                                Модели CatAI
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-400">
+                                    Выберите модель, которая подходит под ваши задачи. PRO-модели требуют активной подписки.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Карточки моделей -->
+                    <div class="mt-6 space-y-4">
+                        <!-- PRO Модель -->
+                        <div class="bg-gray-700 rounded-lg p-4 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-semibold text-white">CatAI PRO 🚀</h4>
+                                <p class="text-sm text-gray-300">Лимит 10,000 символов, приоритетная поддержка.</p>
+                            </div>
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700" disabled>
+                                Скоро
+                            </button>
+                        </div>
+                         <!-- Fast Модель -->
+                        <div class="bg-gray-700 rounded-lg p-4 flex justify-between items-center opacity-70">
+                            <div>
+                                <h4 class="font-semibold text-white">CatAI Fast ⚡</h4>
+                                <p class="text-sm text-gray-300">Оптимизирована для быстрых ответов.</p>
+                            </div>
+                            <span class="text-sm text-gray-400">Доступно</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-700">
+                    <button id="close-modal-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-gray-600 shadow-sm px-4 py-2 bg-gray-700 text-base font-medium text-white hover:bg-gray-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">
+                        Закрыть
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- 
       ========================================
@@ -288,11 +360,18 @@
         const chatHistoryList = document.getElementById('chat-history-list');
         const logoutBtn = document.getElementById('logout-btn');
 
+        // Модальное окно
+        const modelsBtn = document.getElementById('models-btn');
+        const modelsModal = document.getElementById('models-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+
         // Состояние приложения
         let currentUserId = null;
         let userChatsData = {}; // Кэш данных из RTDB
         let currentActiveChatId = null;
         let chatsListener = null; // Хранит функцию отписки от onValue
+        let hasProSubscription = false; // <-- СИМУЛЯЦИЯ ПОДПИСКИ
 
         const WELCOME_MESSAGE = 'Привет! Я CatAI. Чем могу помочь?';
 
@@ -323,6 +402,7 @@
                     window.location.hash = '#ai';
                 }
                 setupChatListeners(currentUserId); // Запускаем realtime-слушатель
+                updateModelAvailability(); // <-- ВЫЗЫВАЕМ ОБНОВЛЕНИЕ МОДЕЛЕЙ
             } else {
                 // Пользователь вышел
                 currentUserId = null;
@@ -381,6 +461,20 @@
 
 
         // === ЛОГИКА FIREBASE REALTIME DATABASE ===
+
+        /** Обновляет доступность моделей в <select> на основе подписки */
+        function updateModelAvailability() {
+            const proOption = document.querySelector('#model-select option[value="pro"]');
+            if (!proOption) return;
+
+            if (hasProSubscription) {
+                proOption.disabled = false;
+                proOption.textContent = 'CatAI PRO';
+            } else {
+                proOption.disabled = true;
+                proOption.textContent = 'CatAI PRO (Нет подписки)';
+            }
+        }
 
         /** Запускает onValue слушатель для чатов пользователя */
         function setupChatListeners(uid) {
@@ -536,12 +630,12 @@
             const selectedModel = modelSelect.value; 
             let modelPrefix = '';
 
-            // <-- ИЗМЕНЕНО: Логика префиксов для новых моделей
-            if (selectedModel === 'CatAI base') {
+            // <-- ИЗМЕНЕНО: Логика префиксов по 'value'
+            if (selectedModel === 'base') {
                 modelPrefix = '(CatAI base 🐈): ';
-            } else if (selectedModel === 'CatAI Fast') {
+            } else if (selectedModel === 'fast') {
                 modelPrefix = '(CatAI Fast ⚡): ';
-            } else if (selectedModel === 'CatAI PRO') {
+            } else if (selectedModel === 'pro') {
                 modelPrefix = '(CatAI PRO 🚀): ';
             } else {
                 modelPrefix = `(${selectedModel}): `; // Запасной вариант
@@ -629,6 +723,20 @@
                     typingIndicator.classList.add('hidden');
                 }
             }
+        });
+
+        // 4. Открытие/Закрытие модального окна
+        modelsBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            modelsModal.classList.remove('hidden');
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            modelsModal.classList.add('hidden');
+        });
+
+        modalBackdrop.addEventListener('click', () => {
+            modelsModal.classList.add('hidden');
         });
 
     </script>
