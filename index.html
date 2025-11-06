@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ru" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CatAI - Вход</title>
+    <!-- Подключаем Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Подключаем шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Базовые стили */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Стили для кастомного скроллбара в чате */
+        #chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        #chat-messages::-webkit-scrollbar-track {
+            background: #202123; /* Цвет фона трека */
+        }
+        #chat-messages::-webkit-scrollbar-thumb {
+            background-color: #4a4a4a; /* Цвет ползунка */
+            border-radius: 20px; /* Скругление */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white h-full overflow-hidden">
+
+    <!-- 
+      Секции приложения.
+      JavaScript будет показывать одну и скрывать остальные в зависимости от URL hash.
+    -->
+
+    <!-- ======================= -->
+    <!--      ЭКРАН ВХОДА        -->
+    <!-- ======================= -->
+    <section id="login" class="page hidden h-full">
+        <div class="flex items-center justify-center min-h-full px-4 py-12">
+            <div class="w-full max-w-md space-y-8">
+                <div>
+                    <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-white">
+                        Вход в CatAI
+                    </h2>
+                </div>
+                <form id="login-form" class="mt-8 space-y-6" action="#" method="POST">
+                    <input type="hidden" name="remember" value="true">
+                    <div class="rounded-md shadow-sm -space-y-px">
+                        <div>
+                            <label for="login-email" class="sr-only">Email</label>
+                            <input id="login-email" name="email" type="email" autocomplete="email" required
+                                class="relative block w-full appearance-none rounded-t-md border-0 bg-gray-700 px-3 py-3 text-white placeholder-gray-400 focus:z-10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm"
+                                placeholder="Email" value="user@catai.com">
+                        </div>
+                        <div>
+                            <label for="login-password" class="sr-only">Пароль</label>
+                            <input id="login-password" name="password" type="password" autocomplete="current-password" required
+                                class="relative block w-full appearance-none rounded-b-md border-0 bg-gray-700 px-3 py-3 text-white placeholder-gray-400 focus:z-10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm"
+                                placeholder="Пароль" value="password">
+                        </div>
+                    </div>
+
+                    <div>
+                        <button type="submit"
+                            class="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900">
+                            Войти
+                        </button>
+                    </div>
+                </form>
+                <p class="text-center text-sm text-gray-400">
+                    Нет аккаунта?
+                    <a href="#register" class="font-medium text-blue-400 hover:text-blue-300">
+                        Регистрация
+                    </a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================= -->
+    <!--    ЭКРАН РЕГИСТРАЦИИ    -->
+    <!-- ======================= -->
+    <section id="register" class="page hidden h-full">
+        <div class="flex items-center justify-center min-h-full px-4 py-12">
+            <div class="w-full max-w-md space-y-8">
+                <div>
+                    <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-white">
+                        Создать аккаунт CatAI
+                    </h2>
+                </div>
+                <form id="register-form" class="mt-8 space-y-6" action="#" method="POST">
+                    <div class="rounded-md shadow-sm space-y-3">
+                        <div>
+                            <label for="register-email" class="sr-only">Email</label>
+                            <input id="register-email" name="email" type="email" autocomplete="email" required
+                                class="relative block w-full appearance-none rounded-md border-0 bg-gray-700 px-3 py-3 text-white placeholder-gray-400 focus:z-10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm"
+                                placeholder="Email">
+                        </div>
+                        <div>
+                            <label for="register-password" class="sr-only">Пароль</label>
+                            <input id="register-password" name="password" type="password" required
+                                class="relative block w-full appearance-none rounded-md border-0 bg-gray-700 px-3 py-3 text-white placeholder-gray-400 focus:z-10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm"
+                                placeholder="Пароль">
+                        </div>
+                         <div>
+                            <label for="register-confirm-password" class="sr-only">Повторите пароль</label>
+                            <input id="register-confirm-password" name="confirm-password" type="password" required
+                                class="relative block w-full appearance-none rounded-md border-0 bg-gray-700 px-3 py-3 text-white placeholder-gray-400 focus:z-10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm"
+                                placeholder="Повторите пароль">
+                        </div>
+                    </div>
+
+                    <div>
+                        <button type="submit"
+                            class="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900">
+                            Зарегистрироваться
+                        </button>
+                    </div>
+                </form>
+                <p class="text-center text-sm text-gray-400">
+                    Уже есть аккаунт?
+                    <a href="#login" class="font-medium text-blue-400 hover:text-blue-300">
+                        Войти
+                    </a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================= -->
+    <!--       ЭКРАН ЧАТА        -->
+    <!-- ======================= -->
+    <section id="ai" class="page hidden h-full">
+        <div class="flex h-full">
+            <!-- Боковая панель (для похожести на ChatGPT) -->
+            <div class="hidden md:flex md:w-64 flex-col bg-gray-950 border-r border-gray-700">
+                <div class="flex h-full min-h-0 flex-col">
+                    <div class="flex-1 overflow-y-auto p-4">
+                        <!-- Кнопка нового чата -->
+                        <a href="#ai" id="new-chat-btn" class="flex items-center justify-between w-full px-3 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 mb-4">
+                            <span>Новый чат</span>
+                            <!-- Иконка "плюс" -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        
+                        <!-- Список прошлых чатов (будет заполнен JS) -->
+                        <nav id="chat-history-list" class="flex-1 space-y-1">
+                            <!-- Сюда JS добавит ссылки на чаты -->
+                        </nav>
+                    </div>
+                    <!-- Футер сайдбара -->
+                    <div class="border-t border-gray-700 p-4">
+                         <a href="#login" class="flex w-full items-center px-3 py-2 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800 hover:text-white">
+                            <!-- Иконка выхода -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                            </svg>
+                            Выйти
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Основная область чата -->
+            <div class="flex flex-1 flex-col overflow-hidden">
+                <!-- Хедер (виден на мобильных) -->
+                <header class="flex md:hidden items-center justify-between border-b border-gray-700 bg-gray-900 px-4 py-3">
+                     <h1 class="text-lg font-semibold text-white">CatAI</h1>
+                     <a href="#login" class="text-gray-400 hover:text-white">
+                        <!-- Иконка выхода -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                     </a>
+                </header>
+
+                <!-- Контейнер сообщений -->
+                <main class="flex-1 overflow-y-auto" id="chat-messages">
+                    <!-- Сообщения будут добавляться сюда с помощью JavaScript. -->
+                </main>
+
+                <!-- Индикатор "печатает..." (скрыт по умолчанию) -->
+                <div id="typing-indicator" class="hidden px-4 py-2 text-sm text-gray-400">
+                    CatAI печатает...
+                </div>
+
+                <!-- Форма ввода сообщения -->
+                <footer class="p-4 bg-gray-900 border-t border-gray-700">
+                    <form id="chat-form" class="flex items-center space-x-3">
+                        <label for="chat-input" class="sr-only">Ваше сообщение</label>
+                        <input type="text" id="chat-input" autocomplete="off"
+                            class="flex-1 block w-full rounded-lg border-0 bg-gray-800 px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                            placeholder="Напишите что-нибудь для CatAI...">
+                        <button type="submit"
+                            class="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900">
+                            <!-- Иконка "отправить" (бумажный самолетик) -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009.175 16V4.697a1 1 0 00-1.169-1.409l-5 1.429zM10 4.697v11.304l5-1.429a1 1 0 00.707-1.707l-7-14z" />
+                            </svg>
+                            <span class="sr-only">Отправить</span>
+                        </button>
+                    </form>
+                    <p class="text-center text-xs text-gray-500 mt-3">
+                        CatAI. Ответы могут быть неточными.
+                    </p>
+                </footer>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И DOM ЭЛЕМЕНТЫ ===
+            const pages = document.querySelectorAll('.page');
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const chatForm = document.getElementById('chat-form');
+            const chatInput = document.getElementById('chat-input');
+            const chatMessages = document.getElementById('chat-messages');
+            const typingIndicator = document.getElementById('typing-indicator');
+            const newChatBtn = document.getElementById('new-chat-btn');
+            const chatHistoryList = document.getElementById('chat-history-list');
+
+            // Ключи для localStorage
+            const CHATS_KEY = 'catai_chats';
+            const ACTIVE_CHAT_KEY = 'catai_activeChatId';
+            const WELCOME_MESSAGE = 'Привет! Я CatAI. Чем могу помочь?';
+
+            // === ЛОГИКА МАРШРУТИЗАЦИИ (ПЕРЕКЛЮЧЕНИЯ СТРАНИЦ) ===
+
+            function updateView() {
+                const hash = window.location.hash || '#login'; 
+                
+                pages.forEach(page => page.classList.add('hidden'));
+
+                const activePage = document.querySelector(hash);
+                if (activePage) {
+                    activePage.classList.remove('hidden');
+                    
+                    if (hash === '#ai') {
+                        // При переходе в чат, загружаем историю
+                        loadChatApp();
+                    } else if (hash === '#login') {
+                        // При выходе сбрасываем активный чат
+                        localStorage.removeItem(ACTIVE_CHAT_KEY);
+                    }
+                } else {
+                    document.querySelector('#login').classList.remove('hidden');
+                }
+            }
+
+            // Слушаем изменения хеша в URL
+            window.addEventListener('hashchange', updateView);
+            // Вызываем updateView при первой загрузке
+            updateView();
+
+            // === ЛОГИКА ФОРМ ВХОДА И РЕГИСТРАЦИИ ===
+
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log('Попытка входа...');
+                window.location.hash = '#ai';
+            });
+
+            registerForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log('Попытка регистрации...');
+                // Имитация модального окна
+                alert('Регистрация прошла успешно! Теперь вы можете войти.');
+                window.location.hash = '#login';
+            });
+
+
+            // === ЛОГИКА ХРАНИЛИЩА (localStorage) ===
+
+            /** Получает все чаты из localStorage */
+            function getChats() {
+                return JSON.parse(localStorage.getItem(CHATS_KEY)) || [];
+            }
+
+            /** Сохраняет все чаты в localStorage */
+            function saveChats(chats) {
+                localStorage.setItem(CHATS_KEY, JSON.stringify(chats));
+            }
+
+            /** Получает ID активного чата */
+            function getActiveChatId() {
+                return localStorage.getItem(ACTIVE_CHAT_KEY);
+            }
+
+            /** Устанавливает ID активного чата */
+            function setActiveChatId(id) {
+                localStorage.setItem(ACTIVE_CHAT_KEY, id);
+            }
+
+            /** Сохраняет одно сообщение в активный чат */
+            function saveMessage(chatId, text, sender) {
+                const chats = getChats();
+                const chat = chats.find(c => c.id === chatId);
+                if (chat) {
+                    chat.messages.push({ sender, text });
+                    saveChats(chats);
+                }
+            }
+            
+            /** Обновляет заголовок чата */
+            function updateChatTitle(chatId, newTitle) {
+                 const chats = getChats();
+                 const chat = chats.find(c => c.id === chatId);
+                 if(chat) {
+                    chat.title = newTitle;
+                    saveChats(chats);
+                    renderSidebar(chats, chatId); // Перерисовываем сайдбар с новым заголовком
+                 }
+            }
+
+            // === ЛОГИКА ЧАТА (РЕНДЕРИНГ) ===
+
+            /** Запускает приложение чата: загружает чаты, сайдбар и активный чат */
+            function loadChatApp() {
+                let chats = getChats();
+                let activeId = getActiveChatId();
+
+                // Если чатов нет, создаем первый
+                if (chats.length === 0) {
+                    const newId = 'chat_' + Date.now();
+                    const newChat = { 
+                        id: newId, 
+                        title: 'Новый чат', 
+                        messages: [{ sender: 'ai', text: WELCOME_MESSAGE }] 
+                    };
+                    chats = [newChat];
+                    activeId = newId;
+                    saveChats(chats);
+                    setActiveChatId(activeId);
+                }
+
+                if (!activeId || !chats.find(c => c.id === activeId)) {
+                    activeId = chats[0].id;
+                    setActiveChatId(activeId);
+                }
+
+                renderSidebar(chats, activeId);
+                renderChat(activeId);
+            }
+
+            /** Отрисовывает список чатов в сайдбаре */
+            function renderSidebar(chats, activeId) {
+                chatHistoryList.innerHTML = '';
+                chats.forEach(chat => {
+                    const isActive = chat.id === activeId;
+                    const link = document.createElement('a');
+                    link.href = '#ai'; // Исправлено: не #, а #ai
+                    link.dataset.chatId = chat.id;
+                    link.textContent = chat.title;
+                    link.className = `block truncate px-3 py-2 text-sm font-medium rounded-md ${
+                        isActive 
+                        ? 'text-white bg-gray-800' 
+                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                    }`;
+                    chatHistoryList.appendChild(link);
+                });
+            }
+
+            /** Отрисовывает сообщения активного чата */
+            function renderChat(chatId) {
+                const chat = getChats().find(c => c.id === chatId);
+                chatMessages.innerHTML = ''; // Очищаем чат
+                
+                if (chat) {
+                    chat.messages.forEach(message => {
+                        addMessageToDOM(message.text, message.sender);
+                    });
+                    setActiveChatId(chatId);
+                    // Обновляем сайдбар, чтобы подсветить активный чат
+                    renderSidebar(getChats(), chatId);
+                }
+            }
+
+            /** Добавляет ОДНО сообщение в DOM (в окно чата) */
+            function addMessageToDOM(text, sender) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', 'p-4', 'max-w-3xl', 'mx-auto');
+
+                let content = '';
+
+                if (sender === 'ai') {
+                    messageElement.classList.add('bg-gray-800'); 
+                    content = `
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm">C</div>
+                            <div class="flex-1">
+                                <p class="font-semibold">CatAI</p>
+                                <p class="text-gray-300">${text}</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    content = `
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center font-bold text-sm">U</div>
+                            <div class="flex-1">
+                                <p class="font-semibold">Вы</p>
+                                <p class="text-white">${text}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                messageElement.innerHTML = content;
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight; // Автопрокрутка
+            }
+            
+            /** Генерирует простой ответ от ИИ */
+            function getAIResponse(userInput, chatId) { // <-- 1. Принимаем ID чата
+                const lowerInput = userInput.toLowerCase();
+                let response = '';
+
+                if (lowerInput.includes('привет')) {
+                    response = 'Мяу! Привет. Чем могу быть полезен?';
+                } else if (lowerInput.includes('как дела')) {
+                    response = 'Я CatAI, и у меня все в порядке. А у вас?';
+                } else if (lowerInput.includes('пока')) {
+                    response = 'До встречи! Был рад пообщаться. Мяу!';
+                } else if (lowerInput.includes('котик') || lowerInput.includes('кошка')) {
+                    response = 'Я очень люблю котиков! Мррр...';
+                } else {
+                    response = 'Извините, я CatAI и не могу обработать этот запрос. Я еще учусь. Попробуйте спросить что-нибудь другое.';
+                }
+
+                // 2. Сразу сохраняем в правильный чат в localStorage
+                saveMessage(chatId, response, 'ai');
+
+                // 3. Проверяем, какой чат активен СЕЙЧАС
+                const currentActiveId = getActiveChatId();
+
+                // 4. Показываем ответ в DOM, только если пользователь не переключил чат
+                if (chatId === currentActiveId) {
+                    typingIndicator.classList.add('hidden');
+                    addMessageToDOM(response, 'ai');
+                }
+                
+                // Старое сохранение убираем, так как мы уже сохранили выше
+                // saveMessage(getActiveChatId(), response, 'ai'); // <-- УДАЛЕНО
+            }
+
+
+            // === ОБРАБОТЧИКИ СОБЫТИЙ ===
+
+            // 1. Отправка формы чата
+            chatForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const messageText = chatInput.value.trim();
+                const activeId = getActiveChatId();
+
+                if (messageText && activeId) {
+                    // 1. Добавить в DOM
+                    addMessageToDOM(messageText, 'user');
+                    // 2. Сохранить в localStorage
+                    saveMessage(activeId, messageText, 'user');
+                    // 3. Очистить поле ввода
+                    chatInput.value = '';
+                    
+                    // 4. Проверить, не нужно ли обновить заголовок чата
+                    const chat = getChats().find(c => c.id === activeId);
+                    // Если это первое сообщение пользователя (второе в чате после приветствия)
+                    if (chat && chat.messages.length === 2) { 
+                        const newTitle = messageText.length > 25 ? messageText.substring(0, 25) + '...' : messageText;
+                        updateChatTitle(activeId, newTitle);
+                    }
+                    
+                    // 5. Показать индикатор "печатает"
+                    typingIndicator.classList.remove('hidden');
+                    // 6. Сгенерировать ответ ИИ с задержкой, передав ID чата
+                    setTimeout(getAIResponse, 1500, messageText, activeId); // <-- Передаем activeId
+                }
+            });
+            
+            // 2. Нажатие кнопки "Новый чат"
+            newChatBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                const chats = getChats();
+                const newId = 'chat_' + Date.now();
+                const newChat = { 
+                    id: newId, 
+                    title: 'Новый чат', 
+                    messages: [{ sender: 'ai', text: WELCOME_MESSAGE }] 
+                };
+                
+                chats.push(newChat);
+                saveChats(chats);
+                setActiveChatId(newId);
+                
+                renderSidebar(chats, newId);
+                renderChat(newId);
+                typingIndicator.classList.add('hidden'); // <-- Добавлено: скрыть индикатор
+            });
+            
+            // 3. Нажатие на чат в истории (делегирование событий)
+            chatHistoryList.addEventListener('click', (e) => {
+                const link = e.target.closest('a[data-chat-id]');
+                if (link) {
+                    e.preventDefault();
+                    const chatId = link.dataset.chatId;
+                    renderChat(chatId);
+                    typingIndicator.classList.add('hidden'); // <-- Добавлено: скрыть индикатор
+                }
+            });
+
+        });
+    </script>
+
+</body>
+</html>
