@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="ru" class="h-full">
 <head>
     <meta charset="UTF-8">
@@ -255,6 +255,7 @@
         const loginPasswordInput = document.getElementById('login-password');
         const registerEmailInput = document.getElementById('register-email');
         const registerPasswordInput = document.getElementById('register-password');
+        const registerConfirmPasswordInput = document.getElementById('register-confirm-password'); // <-- ДОБАВЛЕНО
 
         // Чат
         const chatForm = document.getElementById('chat-form');
@@ -331,6 +332,14 @@
             e.preventDefault();
             const email = registerEmailInput.value;
             const password = registerPasswordInput.value;
+            const confirmPassword = registerConfirmPasswordInput.value; // <-- ДОБАВЛЕНО
+
+            // <-- ДОБАВЛЕНА ПРОВЕРКА
+            if (password !== confirmPassword) {
+                alert("Пароли не совпадают!");
+                return;
+            }
+
             try {
                 await createUserWithEmailAndPassword(auth, email, password);
                 // onAuthStateChanged поймает нового юзера, но мы
