@@ -521,27 +521,51 @@
         // === ЛОГИКА FIREBASE REALTIME DATABASE ===
 
         // === 5. НОВАЯ ФУНКЦИЯ: ЗАГРУЗКА БАЗЫ ЗНАНИЙ ===
-        async function loadKnowledgeBase() {
-            // !!! ВАЖНО: Укажи правильный путь к твоему JSON файлу в Firebase
-            const KNOWLEDGE_BASE_PATH = 'catai_qa'; // <--- ИЗМЕНИ ЭТО НА СВОЙ ПУТЬ
+// === 5. НОВАЯ ФУНКЦИЯ: ЗАГРУЗКА БАЗЫ ЗНАНИЙ (из нескольких папок) ===
+        async function loadKnowledgeBase() {
+            // 1. Список всех твоих "папок" (ключей) в корне базы
+            const TOPIC_KEYS = [
+                'cooking', 
+                'geography', 
+                'homemade', 
+                'Technic', 
+                'communication', 
+                'history'
+            ];
 
-            console.log(`Загрузка базы знаний из Firebase по пути: ${KNOWLEDGE_BASE_PATH}...`);
-            try {
-                const dbRef = ref(db, KNOWLEDGE_BASE_PATH);
-                const snapshot = await get(dbRef);
-                
-                if (snapshot.exists()) {
-                    knowledgeBase = snapshot.val();
-                    console.log('База знаний успешно загружена!', Object.keys(knowledgeBase).length, 'записей.');
-                } else {
-                    console.warn('База знаний не найдена по пути:', KNOWLEDGE_BASE_PATH);
-                    knowledgeBase = {}; // Оставляем пустым
-                }
-            } catch (error) {
-                console.error('Ошибка загрузки базы знаний:', error);
-                knowledgeBase = {}; // Оставляем пустым в случае ошибки
-            }
-        }
+            console.log(`Загрузка базы знаний из ${TOPIC_KEYS.length} тем...`);
+            knowledgeBase = {}; // 2. Очищаем старую базу
+            let totalEntries = 0;
+
+            try {
+                // 3. Перебираем каждую папку
+                for (const key of TOPIC_KEYS) {
+                    const dbRef = ref(db, key);
+                    const snapshot = await get(dbRef);
+
+                    if (snapshot.exists()) {
+                        const topicData = snapshot.val();
+                        const topicCount = Object.keys(topicData).length;
+                        
+                        // 4. "Склеиваем" Q/A из этой папки с общей базой
+                        Object.assign(knowledgeBase, topicData);
+                        
+                        console.log(`- Успешно загружена тема '${key}' (${topicCount} записей).`);
+                        totalEntries += topicCount;
+                    } else {
+                        // Если папки еще нет - это не ошибка, просто пропускаем
+                        console.warn(`! Тема '${key}' не найдена, пропускаем.`);
+                    }
+                }
+                
+                console.log(`База знаний полностью загружена! Всего ${totalEntries} записей.`);
+            
+            } catch (error) {
+                // Это ошибка, если нет ДОСТУПА (Permission Denied)
+                console.error('Критическая ошибка загрузки базы знаний:', error);
+                knowledgeBase = {}; 
+            }
+        }
 
         // Слушатель подписки (запускается при входе)
         function setupSubscriptionListener(uid) {
