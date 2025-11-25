@@ -275,6 +275,7 @@
         const chatMessages = document.getElementById('chat-messages');
         const chatForm = document.getElementById('chat-form');
         const chatInput = document.getElementById('chat-input');
+        const typingIndicator = document.getElementById('typing-indicator'); // Индикатор
         
         let currentUserId = null;
         let isAdmin = false;
@@ -282,6 +283,15 @@
         let currentActiveChatId = null;
         let knowledgeBase = {};
         let subscriptionStatus = { status: 'none' };
+        
+        // Фразы для "размышления" (Pro режим)
+        const thinkingPhrases = [
+            "Анализирую контекст...",
+            "Проверяю базу знаний...",
+            "Формирую структуру ответа...",
+            "Вспоминаю нюансы...",
+            "Оптимизирую формулировку..."
+        ];
 
         // === 1. ЛЕВЕНШТЕЙН И УМНЫЙ ПОИСК ===
         function levenshtein(a, b) {
@@ -307,7 +317,6 @@
                 const normalizedKey = key.toLowerCase();
                 let currentScore = 0;
                 
-                // Проверка корней слов (для "свар" -> "сварить")
                 const keyWords = normalizedKey.split(' ');
                 let wordsMatchCount = 0;
                 inputWords.forEach(inWord => {
@@ -317,7 +326,6 @@
                     });
                 });
 
-                // Левенштейн
                 const distance = levenshtein(normalizedInput, normalizedKey);
                 const maxLength = Math.max(normalizedInput.length, normalizedKey.length);
                 const similarity = 1 - (distance / maxLength);
@@ -329,16 +337,14 @@
                     bestMatch = key;
                 }
             }
-            // Порог уверенности
             if (bestScore > 0.45) return db[bestMatch];
             return null;
         }
 
-        // === 2. ЗАГРУЗКА БАЗЫ ЗНАНИЙ (ВСЕ ФАЙЛЫ) ===
+        // === 2. ЗАГРУЗКА БАЗЫ ЗНАНИЙ ===
         async function loadKnowledgeBase() {
             const files = ['chat.json', 'cooking.json', 'technics.json', 'programm.json'];
             knowledgeBase = {};
-            
             for (const file of files) {
                 try {
                     const response = await fetch(file);
@@ -351,7 +357,6 @@
                     console.error(`Ошибка загрузки ${file}:`, e);
                 }
             }
-            console.log('База знаний загружена. Всего записей:', Object.keys(knowledgeBase).length);
         }
 
         // === 3. РОУТИНГ ===
@@ -367,7 +372,7 @@
         }
         window.addEventListener('hashchange', updateView);
 
-        // === 4. AUTH (С обработкой ошибок) ===
+        // === 4. AUTH ===
         onAuthStateChanged(auth, async (user) => {
             currentUserId = user ? user.uid : null;
             if (user) {
@@ -410,15 +415,15 @@
 
         document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-        // === 5. CHAT LOGIC (SIDEBAR FIX) ===
+        // === 5. CHAT LOGIC (ОТОБРАЖЕНИЕ) ===
         function setupChatListeners(uid) {
             onValue(ref(db, `users/${uid}/chats`), (snap) => {
                 userChatsData = snap.val() || {};
                 renderSidebar(userChatsData);
-                if (!currentActiveChatId && Object.keys(userChatsData).length > 0) {
-                    currentActiveChatId = Object.keys(userChatsData)[0];
+                if (currentActiveChatId && userChatsData[currentActiveChatId]) {
                     renderChat(userChatsData[currentActiveChatId]);
-                } else if (currentActiveChatId && userChatsData[currentActiveChatId]) {
+                } else if (!currentActiveChatId && Object.keys(userChatsData).length > 0) {
+                    currentActiveChatId = Object.keys(userChatsData)[0];
                     renderChat(userChatsData[currentActiveChatId]);
                 } else if (!Object.keys(userChatsData).length) {
                     createNewChat();
@@ -429,7 +434,10 @@
         async function createNewChat() {
             if(!currentUserId) return;
             const newRef = push(ref(db, `users/${currentUserId}/chats`));
-            await set(newRef, { title: 'Новый чат', createdAt: serverTimestamp(), messages: [{role: 'ai', content: 'Привет! Я CatAI.'}] });
+            await set(newRef, { title: 'Новый чат', createdAt: serverTimestamp(), messages: [] }); // Messages пустой при старте
+            // Приветствие добавляем сразу
+            const msgRef = push(ref(db, `users/${currentUserId}/chats/${newRef.key}/messages`));
+            await set(msgRef, {role: 'ai', content: 'Привет! Я CatAI.'});
             currentActiveChatId = newRef.key;
         }
 
@@ -447,68 +455,180 @@
                     e.preventDefault();
                     currentActiveChatId = id;
                     renderSidebar(userChatsData);
-                    renderChat(userChatsData[id]);
                 };
                 li.appendChild(a);
                 chatHistoryList.appendChild(li);
             });
         }
 
+        // Рендеринг сообщений (БЕЗ АНИМАЦИИ ПРИ ЗАГРУЗКЕ ИСТОРИИ)
         function renderChat(chat) {
             chatMessages.innerHTML = '';
             if(!chat || !chat.messages) return;
+            
             Object.values(chat.messages).forEach(msg => {
-                const isUser = msg.role === 'user';
-                const div = document.createElement('div');
-                div.className = 'flex items-start space-x-4';
-                div.innerHTML = `
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full ${isUser ? 'bg-indigo-600' : 'bg-blue-600'} flex items-center justify-center text-white font-bold">${isUser?'U':'C'}</div>
-                    <div class="flex-1 min-w-0">
-                        <p class="font-bold text-white">${isUser ? 'Вы' : 'CatAI'}</p>
-                        <div class="mt-1 text-gray-300 whitespace-pre-wrap break-words">${msg.content}</div>
-                    </div>
-                `;
-                chatMessages.appendChild(div);
+                appendMessageToUI(msg.role, msg.content, false); // false = без анимации
             });
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        // === 6. AI RESPONSE (УМНЫЙ ОТВЕТ) ===
-        async function getAIResponse(input, chatId, model) {
-            let text = '';
-            let prefix = model === 'base' ? '(Base): ' : (model === 'fast' ? '(Fast): ' : '');
+        // Функция добавления сообщения в UI
+        // animate = true только для нового сообщения от AI в данный момент
+        function appendMessageToUI(role, content, animate = false, typingSpeed = 30) {
+            const isUser = role === 'user';
+            const div = document.createElement('div');
+            div.className = 'flex items-start space-x-4 mb-4';
             
-            if (model === 'pro') {
-                if (subscriptionStatus.status !== 'active') { text = 'Ошибка: Нет PRO подписки.'; }
-                else { prefix = `(PRO ${subscriptionStatus.limit/1000}k): `; }
+            let innerContent = '';
+            if (animate) {
+                innerContent = '<span class="typing-cursor">|</span>'; // Курсор для анимации
+            } else {
+                innerContent = content; // Сразу текст, если история
             }
 
-            if (!text) {
-                const answer = findBestMatch(input, knowledgeBase);
-                text = answer ? (prefix + answer) : (prefix + 'Я не понял вопрос. Попробуйте иначе.');
-            }
+            div.innerHTML = `
+                <div class="flex-shrink-0 w-10 h-10 rounded-full ${isUser ? 'bg-indigo-600' : 'bg-blue-600'} flex items-center justify-center text-white font-bold">${isUser?'U':'C'}</div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold text-white">${isUser ? 'Вы' : 'CatAI'}</p>
+                    <div class="mt-1 text-gray-300 whitespace-pre-wrap break-words message-content">${innerContent}</div>
+                </div>
+            `;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
 
-            push(ref(db, `users/${currentUserId}/chats/${chatId}/messages`), { role: 'ai', content: text });
+            if (animate) {
+                const contentDiv = div.querySelector('.message-content');
+                typeWriter(contentDiv, content, typingSpeed);
+            }
         }
 
+        // Анимация печатания (Typewriter)
+        function typeWriter(element, text, speed) {
+            let i = 0;
+            element.innerHTML = ''; // Очищаем курсор перед стартом
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    chatMessages.scrollTop = chatMessages.scrollHeight; // Скроллим за текстом
+                    setTimeout(type, speed);
+                }
+            }
+            type();
+        }
+
+        // === 6. ЛОГИКА ОТВЕТА (С РАЗМЫШЛЕНИЕМ) ===
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const txt = chatInput.value.trim();
             if(!txt || !currentActiveChatId) return;
+            
             const cid = currentActiveChatId;
             const model = document.getElementById('model-select').value;
             chatInput.value = '';
 
+            // 1. Показываем сообщение юзера сразу
             await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'user', content: txt });
             
+            // Обновляем заголовок, если первый вопрос
             const msgs = userChatsData[cid]?.messages || {};
             if (Object.keys(msgs).length <= 1) update(ref(db, `users/${currentUserId}/chats/${cid}`), { title: txt.substring(0,25) });
 
-            document.getElementById('typing-indicator').classList.remove('hidden');
-            setTimeout(() => {
-                if(currentActiveChatId === cid) document.getElementById('typing-indicator').classList.add('hidden');
-                getAIResponse(txt, cid, model);
-            }, 1000);
+            // 2. Настройки "думания" и скорости
+            let thinkingTime = 1000; // Базовое время (мс)
+            let typingSpeed = 30;    // Базовая скорость (чем меньше, тем быстрее)
+            let showThinkingProcess = false;
+
+            if (model === 'fast') {
+                thinkingTime = 500;  // Очень быстро думает
+                typingSpeed = 10;    // Пулеметная очередь
+            } else if (model === 'base') {
+                thinkingTime = 1500; // Средне
+                typingSpeed = 30;    // Комфортно
+            } else if (model === 'pro') {
+                thinkingTime = 4000; // Долго "думает"
+                typingSpeed = 50;    // Печатает вальяжно
+                showThinkingProcess = true; // Показываем мысли
+            }
+
+            // Показываем индикатор
+            typingIndicator.classList.remove('hidden');
+            typingIndicator.textContent = "CatAI печатает...";
+
+            // Эмуляция сложного мышления для PRO
+            if (showThinkingProcess) {
+                let step = 0;
+                const thinkInterval = setInterval(() => {
+                    typingIndicator.textContent = "CatAI: " + thinkingPhrases[step % thinkingPhrases.length];
+                    step++;
+                }, 800);
+
+                // Останавливаем мысли через thinkingTime
+                setTimeout(() => {
+                    clearInterval(thinkInterval);
+                    finalizeResponse();
+                }, thinkingTime);
+            } else {
+                // Обычная задержка для Fast/Base
+                setTimeout(() => {
+                    finalizeResponse();
+                }, thinkingTime);
+            }
+
+            async function finalizeResponse() {
+                // Подготовка ответа
+                let text = '';
+                let prefix = '';
+                
+                // Проверка подписки для Pro
+                if (model === 'pro') {
+                    if (subscriptionStatus.status !== 'active') { 
+                        text = 'Ошибка: Для этого режима нужна активная PRO подписка.'; 
+                    } else { 
+                        prefix = `(PRO ${subscriptionStatus.limit/1000}k): `; 
+                    }
+                } else if (model === 'fast') {
+                    prefix = '(Fast ⚡): ';
+                } else {
+                    prefix = '(Base ⚙️): ';
+                }
+
+                if (!text) {
+                    const answer = findBestMatch(txt, knowledgeBase);
+                    text = answer ? (prefix + answer) : (prefix + 'Я не понял вопрос. Попробуйте сформулировать иначе.');
+                }
+
+                // Скрываем индикатор
+                typingIndicator.classList.add('hidden');
+
+                // 3. Сохраняем в базу (чтобы осталось в истории)
+                await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: text });
+                
+                // ВАЖНО: onValue (слушатель) сам отрисует сообщение.
+                // Но чтобы сделать анимацию, нам нужно перехватить этот момент.
+                // Firebase сработает быстро. Анимация запустится при обновлении renderChat.
+                
+                // Чтобы анимация работала ТОЛЬКО для нового сообщения, 
+                // мы сделали renderChat хитрым: он просто перерисовывает всё без анимации.
+                // Анимация нужна только "вживую".
+                // Поэтому мы ВРУЧНУЮ вызовем анимацию последнего сообщения здесь,
+                // Но так как Firebase реактивен, проще всего просто позволить ему обновить чат,
+                // А анимацию сделать визуальным обманом. 
+                
+                // УПРОЩЕНИЕ ДЛЯ ВАС:
+                // Мы удалим последнее сообщение из DOM (которое добавил Firebase render) и перепечатаем его красиво.
+                setTimeout(() => {
+                    const lastMsg = chatMessages.lastElementChild;
+                    if (lastMsg) {
+                        const contentDiv = lastMsg.querySelector('.message-content');
+                        // Если это AI сообщение
+                        if (contentDiv && lastMsg.innerHTML.includes('CatAI')) {
+                            // Запускаем печатную машинку
+                            typeWriter(contentDiv, text, typingSpeed);
+                        }
+                    }
+                }, 100); 
+            }
         });
 
         document.getElementById('new-chat-btn').addEventListener('click', createNewChat);
