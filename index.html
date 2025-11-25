@@ -248,7 +248,7 @@
         </div>
     </div>
 
-  <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
         import { getDatabase, ref, onValue, push, set, serverTimestamp, update, off, get } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
@@ -267,7 +267,6 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // UI Элементы
         const pages = document.querySelectorAll('.page');
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
@@ -284,15 +283,20 @@
         let knowledgeBase = {};
         let subscriptionStatus = { status: 'none' };
         
-        const thinkingPhrases = [
-            "Анализирую контекст...",
-            "Проверяю базу знаний...",
-            "Формирую структуру ответа...",
-            "Вспоминаю нюансы...",
-            "Оптимизирую формулировку..."
-        ];
+        const thinkingPhrases = ["Анализирую контекст...", "Ищу в базе знаний...", "Формулирую ответ...", "Проверяю детали..."];
 
-        // === 1. ЛЕВЕНШТЕЙН И УМНЫЙ ПОИСК ===
+        // === 1. УМНЫЙ ПОИСК (ФИКС "МОРСА") ===
+        
+        // Список слов, которые мы ИГНОРИРУЕМ при поиске, чтобы искать по сути (существительному)
+        const STOP_WORDS = ['как', 'сделать', 'приготовить', 'сварить', 'пожарить', 'рецепт', 'испечь', 'запечь', 'что', 'такое', 'зачем', 'нужен', 'почему'];
+
+        function cleanString(str) {
+            let words = str.toLowerCase().trim().replace(/[\?\!\.\,]/g, '').split(' ');
+            // Убираем стоп-слова, если в запросе есть что-то еще кроме них
+            const filtered = words.filter(w => !STOP_WORDS.includes(w));
+            return filtered.length > 0 ? filtered.join(' ') : words.join(' ');
+        }
+
         function levenshtein(a, b) {
             const matrix = [];
             for (let i = 0; i <= b.length; i++) matrix[i] = [i];
@@ -307,72 +311,73 @@
         }
 
         function findBestMatch(userInput, db) {
-            const normalizedInput = userInput.toLowerCase().trim().replace(/[\?\!\.\,]/g, '');
-            const inputWords = normalizedInput.split(' ');
+            // Очищаем запрос от "мусора" (как, сделать...)
+            const cleanInput = cleanString(userInput);
+            const inputWords = cleanInput.split(' ');
+            
             let bestMatch = null;
             let bestScore = 0;
 
             for (const key in db) {
-                const normalizedKey = key.toLowerCase();
+                // Очищаем ключ из базы так же
+                const cleanKey = cleanString(key);
+                
                 let currentScore = 0;
                 
-                const keyWords = normalizedKey.split(' ');
-                let wordsMatchCount = 0;
+                // 1. Бонус за полное совпадение ключевого слова (Борщ == Борщ)
+                let keyWords = cleanKey.split(' ');
+                let wordMatchBonus = 0;
                 inputWords.forEach(inWord => {
-                    if (inWord.length < 3) return; 
+                    if (inWord.length < 3) return;
                     keyWords.forEach(keyWord => {
-                        if (keyWord.startsWith(inWord)) wordsMatchCount++;
+                        // Если корни совпадают (борщ - борща)
+                        if (keyWord.startsWith(inWord) || inWord.startsWith(keyWord)) {
+                            wordMatchBonus += 0.5; // Огромный бонус
+                        }
                     });
                 });
 
-                const distance = levenshtein(normalizedInput, normalizedKey);
-                const maxLength = Math.max(normalizedInput.length, normalizedKey.length);
+                // 2. Левенштейн для оставшейся сути
+                const distance = levenshtein(cleanInput, cleanKey);
+                const maxLength = Math.max(cleanInput.length, cleanKey.length);
                 const similarity = 1 - (distance / maxLength);
 
-                currentScore = similarity + (wordsMatchCount * 0.5); 
+                currentScore = similarity + wordMatchBonus;
 
                 if (currentScore > bestScore) {
                     bestScore = currentScore;
                     bestMatch = key;
                 }
             }
-            if (bestScore > 0.65) return db[bestMatch];
+            
+            console.log(`Input: "${userInput}" -> Clean: "${cleanInput}" | Match: "${bestMatch}" | Score: ${bestScore}`);
+            
+            // Порог 0.55 достаточно строгий, но бонус за совпадение слов вытянет правильный ответ
+            if (bestScore > 0.55) return db[bestMatch];
             return null;
         }
 
         // === 2. ЗАГРУЗКА БАЗЫ ===
-      // === 2. ЗАГРУЗКА БАЗЫ ЗНАНИЙ (С ЗАЩИТОЙ ОТ КЕША) ===
         async function loadKnowledgeBase() {
             const files = ['chat.json', 'cooking.json', 'technics.json', 'programm.json'];
             knowledgeBase = {};
-            
-            // Генерируем уникальную метку времени
-            const timestamp = new Date().getTime(); 
-
+            const timestamp = new Date().getTime();
             for (const file of files) {
                 try {
-                    // Добавляем ?v=время, чтобы браузер думал, что это новый файл
                     const response = await fetch(file + '?v=' + timestamp);
-                    
-                    if (!response.ok) {
-                        console.warn('Не удалось загрузить:', file);
-                        continue;
-                    }
+                    if (!response.ok) continue;
                     const data = await response.json();
                     for (let key in data) {
                         knowledgeBase[key.toLowerCase().trim()] = data[key];
                     }
-                } catch (e) {
-                    console.error(`Ошибка загрузки ${file}:`, e);
-                }
+                } catch (e) { console.error(e); }
             }
-            console.log('База знаний обновлена. Всего вопросов:', Object.keys(knowledgeBase).length);
         }
-        // === 3. РОУТИНГ ===
+
+        // === 3. UI LOGIC ===
         function updateView() {
             const hash = window.location.hash || (currentUserId ? '#ai' : '#login');
             pages.forEach(p => p.classList.add('hidden'));
-            
             if (hash === '#ai' && currentUserId) document.querySelector('#ai').classList.remove('hidden');
             else if (hash === '#models') { document.querySelector('#ai').classList.remove('hidden'); document.getElementById('models-modal').classList.remove('hidden'); }
             else if (hash === '#admin' && isAdmin) { document.querySelector('#ai').classList.remove('hidden'); document.getElementById('admin-modal').classList.remove('hidden'); }
@@ -403,14 +408,9 @@
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const errorText = document.getElementById('login-error');
-            errorText.textContent = '';
             try {
                 await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value);
-            } catch (error) {
-                 if (error.code === 'auth/wrong-password') errorText.textContent = 'Неверный пароль.';
-                 else if (error.code === 'auth/user-not-found') errorText.textContent = 'Пользователь не найден.';
-                 else errorText.textContent = 'Ошибка: ' + error.message;
-            }
+            } catch (e) { errorText.textContent = 'Ошибка: ' + e.message; }
         });
 
         registerForm.addEventListener('submit', async (e) => {
@@ -418,26 +418,21 @@
             if(document.getElementById('register-password').value !== document.getElementById('register-password-confirm').value) return alert('Пароли не совпадают');
             try {
                 await createUserWithEmailAndPassword(auth, document.getElementById('register-email').value, document.getElementById('register-password').value);
-                alert('Успех! Войдите.'); window.location.hash = '#login';
+                window.location.hash = '#login';
             } catch (e) { document.getElementById('register-error').textContent = e.message; }
         });
-
         document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-        // === 5. CHAT LOGIC ===
+        // === 5. CHAT & ANIMATION (ФИКС ТЕГОВ) ===
         function setupChatListeners(uid) {
             onValue(ref(db, `users/${uid}/chats`), (snap) => {
                 userChatsData = snap.val() || {};
                 renderSidebar(userChatsData);
-                // Отрисовываем чат только если он не в процессе анимации (или инициализация)
-                if (currentActiveChatId && userChatsData[currentActiveChatId]) {
-                    renderChat(userChatsData[currentActiveChatId]);
-                } else if (!currentActiveChatId && Object.keys(userChatsData).length > 0) {
+                if (currentActiveChatId && userChatsData[currentActiveChatId]) renderChat(userChatsData[currentActiveChatId]);
+                else if (!currentActiveChatId && Object.keys(userChatsData).length > 0) {
                     currentActiveChatId = Object.keys(userChatsData)[0];
                     renderChat(userChatsData[currentActiveChatId]);
-                } else if (!Object.keys(userChatsData).length) {
-                    createNewChat();
-                }
+                } else if (!Object.keys(userChatsData).length) createNewChat();
             });
         }
 
@@ -445,8 +440,7 @@
             if(!currentUserId) return;
             const newRef = push(ref(db, `users/${currentUserId}/chats`));
             await set(newRef, { title: 'Новый чат', createdAt: serverTimestamp(), messages: [] });
-            const msgRef = push(ref(db, `users/${currentUserId}/chats/${newRef.key}/messages`));
-            await set(msgRef, {role: 'ai', content: 'Привет! Я CatAI.'});
+            push(ref(db, `users/${currentUserId}/chats/${newRef.key}/messages`), {role: 'ai', content: 'Привет! Я CatAI.'});
             currentActiveChatId = newRef.key;
         }
 
@@ -456,35 +450,21 @@
                 const li = document.createElement('li');
                 const a = document.createElement('a');
                 a.href = '#';
-                a.dataset.id = id;
                 a.textContent = chat.title || 'Чат';
-                const isActive = id === currentActiveChatId;
-                a.className = `block w-full text-left px-3 py-2 text-sm rounded-md truncate transition ${isActive ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`;
-                a.onclick = (e) => {
-                    e.preventDefault();
-                    currentActiveChatId = id;
-                    renderSidebar(userChatsData);
-                };
+                a.className = `block w-full text-left px-3 py-2 text-sm rounded-md truncate transition ${id === currentActiveChatId ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800'}`;
+                a.onclick = (e) => { e.preventDefault(); currentActiveChatId = id; renderSidebar(userChatsData); };
                 li.appendChild(a);
                 chatHistoryList.appendChild(li);
             });
         }
 
         function renderChat(chat) {
-            // ВАЖНО: Мы не очищаем чат, если там есть элемент с классом "animating"
-            // Но для простоты (так как onValue вызывается часто), мы просто перерисовываем всё.
-            // Хитрость в том, что мы добавляем новое сообщение в БД только ПОСЛЕ анимации.
-            
             chatMessages.innerHTML = '';
             if(!chat || !chat.messages) return;
-            
-            Object.values(chat.messages).forEach(msg => {
-                appendMessageToUI(msg.role, msg.content);
-            });
+            Object.values(chat.messages).forEach(msg => appendMessageToUI(msg.role, msg.content));
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        // Функция добавления в UI (возвращает созданный DIV)
         function appendMessageToUI(role, content) {
             const isUser = role === 'user';
             const div = document.createElement('div');
@@ -494,132 +474,100 @@
                 <div class="flex-1 min-w-0">
                     <p class="font-bold text-white">${isUser ? 'Вы' : 'CatAI'}</p>
                     <div class="mt-1 text-gray-300 whitespace-pre-wrap break-words message-content">${content}</div>
-                </div>
-            `;
+                </div>`;
             chatMessages.appendChild(div);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
             return div;
         }
 
-        // Анимация печати (возвращает Promise)
+        // --- ФИКС АНИМАЦИИ (ПРОПУСК ТЕГОВ) ---
         function typeWriter(element, text, speed) {
             return new Promise(resolve => {
                 let i = 0;
-                element.innerHTML = ''; // Очищаем текст перед стартом
+                element.innerHTML = '';
                 function type() {
                     if (i < text.length) {
-                        element.innerHTML += text.charAt(i);
-                        i++;
+                        const char = text.charAt(i);
+                        // Если встретили открывающий тег, ищем закрывающий и вставляем целиком
+                        if (char === '<') {
+                            let tag = '';
+                            while (text.charAt(i) !== '>' && i < text.length) {
+                                tag += text.charAt(i);
+                                i++;
+                            }
+                            tag += '>'; // Закрываем скобку
+                            i++; 
+                            element.innerHTML += tag; // Вставляем тег мгновенно
+                        } else {
+                            element.innerHTML += char;
+                            i++;
+                        }
                         chatMessages.scrollTop = chatMessages.scrollHeight;
                         setTimeout(type, speed);
                     } else {
-                        resolve(); // Анимация завершена
+                        resolve();
                     }
                 }
                 type();
             });
         }
 
-        // === 6. ГЛАВНАЯ ЛОГИКА ОТВЕТА (С ФИКСОМ МИГАНИЯ) ===
+        // === 6. MAIN CHAT HANDLER ===
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const txt = chatInput.value.trim();
             if(!txt || !currentActiveChatId) return;
-            
             const cid = currentActiveChatId;
             const model = document.getElementById('model-select').value;
             chatInput.value = '';
 
-            // 1. Показываем сообщение пользователя и сохраняем его
+            // 1. User message to DB
             await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'user', content: txt });
-            
-            // Обновляем заголовок
             const msgs = userChatsData[cid]?.messages || {};
             if (Object.keys(msgs).length <= 1) update(ref(db, `users/${currentUserId}/chats/${cid}`), { title: txt.substring(0,25) });
 
-            // Настройки скорости
-            let thinkingTime = 1000;
-            let typingSpeed = 30; 
-            let showThinkingProcess = false;
-
-            if (model === 'fast') {
-                thinkingTime = 500;
-                typingSpeed = 10;
-            } else if (model === 'base') {
-                thinkingTime = 1500;
-                typingSpeed = 30;
-            } else if (model === 'pro') {
-                thinkingTime = 4000;
-                typingSpeed = 50; 
-                showThinkingProcess = true;
-            }
-
+            // Settings
+            let thinkingTime = (model === 'fast') ? 500 : ((model === 'pro') ? 4000 : 1500);
+            let typingSpeed = (model === 'fast') ? 10 : ((model === 'pro') ? 50 : 30);
+            
             typingIndicator.classList.remove('hidden');
             typingIndicator.textContent = "CatAI печатает...";
 
-            if (showThinkingProcess) {
+            if (model === 'pro') {
                 let step = 0;
-                const thinkInterval = setInterval(() => {
-                    typingIndicator.textContent = "CatAI: " + thinkingPhrases[step % thinkingPhrases.length];
-                    step++;
-                }, 800);
-
-                setTimeout(() => {
-                    clearInterval(thinkInterval);
-                    finalizeResponse();
-                }, thinkingTime);
+                const interval = setInterval(() => { typingIndicator.textContent = "CatAI: " + thinkingPhrases[step++ % thinkingPhrases.length]; }, 800);
+                setTimeout(() => { clearInterval(interval); finalize(); }, thinkingTime);
             } else {
-                setTimeout(() => {
-                    finalizeResponse();
-                }, thinkingTime);
+                setTimeout(finalize, thinkingTime);
             }
 
-            async function finalizeResponse() {
-                // Подготовка текста ответа
+            async function finalize() {
                 let text = '';
-                let prefix = '';
+                let prefix = model === 'base' ? '(Base ⚙️): ' : (model === 'fast' ? '(Fast ⚡): ' : `(PRO 🚀 ${subscriptionStatus.limit/1000}k): `);
                 
-                if (model === 'pro') {
-                    if (subscriptionStatus.status !== 'active') { 
-                        text = 'Ошибка: Для этого режима нужна активная PRO подписка.'; 
-                    } else { 
-                        prefix = `(PRO ${subscriptionStatus.limit/1000}k): `; 
-                    }
-                } else if (model === 'fast') {
-                    prefix = '(Fast ⚡): ';
+                if (model === 'pro' && subscriptionStatus.status !== 'active') {
+                    text = 'Ошибка: Нужна PRO подписка.';
                 } else {
-                    prefix = '(Base ⚙️): ';
-                }
-
-                if (!text) {
                     const answer = findBestMatch(txt, knowledgeBase);
-                    text = answer ? (prefix + answer) : (prefix + 'Я не понял вопрос. Попробуйте сформулировать иначе.');
+                    text = answer ? (prefix + answer) : (prefix + 'Я не понял вопрос. Попробуйте переформулировать.');
                 }
 
-                // Скрываем индикатор
                 typingIndicator.classList.add('hidden');
 
-                // === ФИКС МИГАНИЯ ЗДЕСЬ ===
+                // 2. Temp message for animation
+                const tempDiv = appendMessageToUI('ai', '');
+                const contentDiv = tempDiv.querySelector('.message-content');
                 
-                // 1. Создаем временное сообщение в чате (визуально)
-                // Оно не сохранено в БД, поэтому onValue его не видит
-                const tempMsgDiv = appendMessageToUI('ai', ''); 
-                const contentDiv = tempMsgDiv.querySelector('.message-content');
-                
-                // 2. Запускаем анимацию в этом временном блоке
+                // 3. Animate
                 await typeWriter(contentDiv, text, typingSpeed);
 
-                // 3. ТОЛЬКО КОГДА анимация закончилась — сохраняем в базу данных
-                // Как только мы сохраним, Firebase вызовет onValue -> renderChat.
-                // renderChat перерисует весь чат заново.
-                // Пользователь увидит подмену, но так как текст одинаковый, скачка не будет.
+                // 4. Save to DB (will trigger re-render, preventing blink)
                 await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: text });
             }
         });
 
         document.getElementById('new-chat-btn').addEventListener('click', createNewChat);
 
-        // === 7. ПОДПИСКИ И МОДАЛКИ ===
+        // === 7. OTHER ===
         function setupSubscriptionListener(uid) {
             onValue(ref(db, `users/${uid}/subscription`), s => {
                 subscriptionStatus = s.val() || { status: 'none' };
@@ -628,7 +576,8 @@
                 else { opt.disabled=true; opt.textContent='CatAI PRO (Нет подписки)'; }
             });
         }
-
+        
+        // Modals Logic
         const modal = document.getElementById('models-modal');
         const pBtn = document.getElementById('purchase-btn');
         document.getElementById('models-btn').addEventListener('click', () => window.location.hash = '#models');
@@ -639,30 +588,23 @@
             document.getElementById('limit-selection-fieldset').classList.toggle('hidden', e.target.value !== 'pro');
             if(e.target.value !== 'pro') { pBtn.disabled=true; pBtn.textContent='Бесплатно'; }
         }));
-        document.querySelectorAll('input[name="limit-selection"]').forEach(r => {
-            r.addEventListener('change', () => { pBtn.disabled=false; pBtn.textContent='Оплатить'; });
-        });
+        document.querySelectorAll('input[name="limit-selection"]').forEach(r => r.addEventListener('change', () => { pBtn.disabled=false; pBtn.textContent='Оплатить'; }));
 
         pBtn.addEventListener('click', async () => {
             const m = document.querySelector('input[name="model-selection"]:checked').value;
-            if(m !== 'pro') return alert('Это бесплатно!');
+            if(m !== 'pro') return alert('Бесплатно!');
             const lim = document.querySelector('input[name="limit-selection"]:checked').value.replace('k','') * 1000;
-            
             document.getElementById('modal-state-waiting').classList.remove('hidden');
             document.getElementById('modal-state-default').classList.add('hidden');
-            
             const reqRef = push(ref(db, 'purchaseRequests'));
             await set(reqRef, { userId: currentUserId, userEmail: auth.currentUser.email, model: m, limit: lim, status: 'pending', timestamp: serverTimestamp() });
-            
             onValue(reqRef, s => {
-                const d = s.val();
-                if(!d) return;
-                if(d.status === 'confirmed') { alert('Куплено!'); window.location.hash='#ai'; modal.classList.add('hidden'); document.getElementById('modal-state-waiting').classList.add('hidden'); document.getElementById('modal-state-default').classList.remove('hidden'); }
-                if(d.status === 'canceled') { alert('Отклонено'); document.getElementById('modal-state-waiting').classList.add('hidden'); document.getElementById('modal-state-default').classList.remove('hidden'); }
+                const d = s.val(); if(!d) return;
+                if(d.status === 'confirmed') { alert('Готово!'); window.location.hash='#ai'; modal.classList.add('hidden'); document.getElementById('modal-state-waiting').classList.add('hidden'); document.getElementById('modal-state-default').classList.remove('hidden'); }
+                if(d.status === 'canceled') { alert('Отказ'); document.getElementById('modal-state-waiting').classList.add('hidden'); document.getElementById('modal-state-default').classList.remove('hidden'); }
             });
         });
 
-        // Admin
         function setupAdminListeners() {
             onValue(ref(db, 'purchaseRequests'), s => {
                 const list = document.getElementById('admin-requests-list');
@@ -672,22 +614,13 @@
                     if(r.status !== 'pending') return;
                     const div = document.createElement('div');
                     div.className = 'bg-gray-700 p-3 rounded flex justify-between items-center';
-                    div.innerHTML = `<div><p class="font-bold">${r.userEmail}</p><p class="text-xs">PRO ${r.limit}</p></div>
-                    <div>
-                        <button class="bg-green-600 px-2 py-1 rounded text-xs mr-2" onclick="window.confirmReq('${rid}','${r.userId}','${r.model}',${r.limit})">OK</button>
-                        <button class="bg-red-600 px-2 py-1 rounded text-xs" onclick="window.rejectReq('${rid}')">X</button>
-                    </div>`;
+                    div.innerHTML = `<div><p class="font-bold">${r.userEmail}</p><p class="text-xs">PRO ${r.limit}</p></div><div><button class="bg-green-600 px-2 py-1 rounded text-xs mr-2" onclick="window.confirmReq('${rid}','${r.userId}','${r.model}',${r.limit})">OK</button><button class="bg-red-600 px-2 py-1 rounded text-xs" onclick="window.rejectReq('${rid}')">X</button></div>`;
                     list.appendChild(div);
                 });
             });
         }
-        
-        window.confirmReq = async (rid, uid, model, limit) => {
-            await set(ref(db, `users/${uid}/subscription`), { status: 'active', model, limit });
-            await update(ref(db, `purchaseRequests/${rid}`), { status: 'confirmed' });
-        };
+        window.confirmReq = async (rid, uid, model, limit) => { await set(ref(db, `users/${uid}/subscription`), { status: 'active', model, limit }); await update(ref(db, `purchaseRequests/${rid}`), { status: 'confirmed' }); };
         window.rejectReq = async (rid) => await update(ref(db, `purchaseRequests/${rid}`), { status: 'canceled' });
-
     </script>
 </body>
 </html>
