@@ -192,14 +192,83 @@
         
         const thinkingPhrases = ["Анализирую контекст...", "Проверяю базу знаний...", "Формирую структуру...", "Уточняю детали...", "Оптимизирую ответ..."];
 
-        // --- 1. УМНЫЙ ПОИСК (ВЕРСИЯ 3.0) ---
-        const STOP_WORDS = [
+       // ==========================================================
+        // === УМНЫЙ ПОИСК 5.0 (ЖЕЛЕЗОБЕТОННЫЙ) ===
+        // ==========================================================
+
+        // 1. Список слов, которые мы ИГНОРИРУЕМ (Мусорные слова)
+        const STOP_WORDS = new Set([
             'как', 'сделать', 'приготовить', 'сварить', 'пожарить', 'зажарить', 
-            'испечь', 'запечь', 'сварганить', 'замутить', 'сообразить',
-            'рецепт', 'способ', 'метод',
-            'что', 'такое', 'зачем', 'нужен', 'почему', 'для', 'чего',
-            'быстро', 'вкусно', 'дома', 'самому'
-        ];
+            'испечь', 'запечь', 'сварганить', 'замутить', 'сообразить', 'намутить',
+            'рецепт', 'способ', 'метод', 'инструкция', 'вариант',
+            'что', 'такое', 'зачем', 'нужен', 'почему', 'для', 'чего', 'какой', 'какая',
+            'быстро', 'вкусно', 'дома', 'самому', 'правильно', 'лучше', 'можно', 'надо',
+            'скажи', 'расскажи', 'напиши', 'покажи', 'дай'
+        ]);
+
+        function cleanString(str) {
+            return str.toLowerCase().trim().replace(/[\?\!\.\,\(\)\-\:]/g, '');
+        }
+
+        function findBestMatch(userInput, db) {
+            // 1. Разбиваем запрос юзера на важные слова (токенизация)
+            const userWords = cleanString(userInput).split(/\s+/);
+            
+            // Оставляем только те слова, которых НЕТ в стоп-листе и которые длиннее 2 букв
+            // Пример: "как сварить борщ" -> ["борщ"]
+            const importantUserWords = userWords.filter(w => !STOP_WORDS.has(w) && w.length > 2);
+
+            // Если юзер написал только мусор (например "как сделать?"), ищем по всему тексту
+            const wordsToSearch = importantUserWords.length > 0 ? importantUserWords : userWords;
+
+            let bestMatchKey = null;
+            let maxMatches = 0;
+
+            // 2. Пробегаем по всей базе
+            for (const dbKey in db) {
+                const dbWords = cleanString(dbKey).split(/\s+/);
+                
+                // Считаем, сколько ВАЖНЫХ слов совпало
+                let currentMatches = 0;
+
+                wordsToSearch.forEach(uWord => {
+                    dbWords.forEach(dbWord => {
+                        // Точное совпадение (борщ == борщ)
+                        if (uWord === dbWord) {
+                            currentMatches += 10; // Жирный плюс
+                        }
+                        // Совпадение корней (борща == борщ)
+                        else if (dbWord.startsWith(uWord) || uWord.startsWith(dbWord)) {
+                            currentMatches += 8;
+                        }
+                        // Опечатка (сделкть == сделать) - допускаем 1 ошибку
+                        else if (Math.abs(uWord.length - dbWord.length) <= 1) {
+                            // Простая проверка на опечатки (без Левенштейна для скорости)
+                            let errors = 0;
+                            for(let i=0; i < Math.min(uWord.length, dbWord.length); i++) {
+                                if(uWord[i] !== dbWord[i]) errors++;
+                            }
+                            if (errors <= 1) currentMatches += 5;
+                        }
+                    });
+                });
+
+                // Если этот ключ набрал больше очков, чем предыдущий лидер
+                if (currentMatches > maxMatches) {
+                    maxMatches = currentMatches;
+                    bestMatchKey = dbKey;
+                }
+            }
+
+            console.log(`Запрос: "${userInput}" | Ключевые слова: [${wordsToSearch}] | Найдено: "${bestMatchKey}" (${maxMatches})`);
+
+            // Порог срабатывания (должно совпасть хотя бы одно слово или корень)
+            if (maxMatches >= 5) {
+                return db[bestMatchKey];
+            }
+            
+            return null;
+        }
 
         function cleanString(str) {
             return str.toLowerCase().trim().replace(/[\?\!\.\,\(\)\-\:]/g, '');
