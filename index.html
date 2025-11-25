@@ -138,7 +138,7 @@
         </div>
     </div>
 
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
         import { getDatabase, ref, onValue, push, set, serverTimestamp, update, off, get } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
@@ -157,7 +157,6 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // --- UI ---
         const pages = document.querySelectorAll('.page');
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
@@ -177,54 +176,116 @@
         const thinkingPhrases = ["Анализирую контекст...", "Проверяю базу знаний...", "Формирую структуру...", "Уточняю детали...", "Оптимизирую ответ..."];
 
         // ==========================================================
-        // === 1. УМНЫЙ ПОИСК 5.0 (ПО КЛЮЧЕВЫМ СЛОВАМ) ===
+        // === 1. УМНЫЙ ПОИСК (МАТЕМАТИКА + ЛЕВЕНШТЕЙН) ===
         // ==========================================================
-        const STOP_WORDS = new Set([
+        
+        // Эти слова мы стараемся игнорировать, чтобы искать СУТЬ.
+        const STOP_WORDS = [
             'как', 'сделать', 'приготовить', 'сварить', 'пожарить', 'зажарить', 
-            'испечь', 'запечь', 'сварганить', 'замутить', 'сообразить', 'намутить',
-            'рецепт', 'способ', 'метод', 'инструкция', 'вариант',
-            'что', 'такое', 'зачем', 'нужен', 'почему', 'для', 'чего', 'какой', 'какая',
-            'быстро', 'вкусно', 'дома', 'самому', 'правильно', 'лучше', 'можно', 'надо',
-            'скажи', 'расскажи', 'напиши', 'покажи', 'дай'
-        ]);
+            'рецепт', 'способ', 'метод',
+            'что', 'такое', 'зачем', 'нужен', 'почему', 'для', 'чего', 'какой',
+            'быстро', 'вкусно', 'дома', 'самому'
+        ];
 
         function cleanString(str) {
             return str.toLowerCase().trim().replace(/[\?\!\.\,\(\)\-\:]/g, '');
         }
 
-        function findBestMatch(userInput, db) {
-            const userWords = cleanString(userInput).split(/\s+/);
-            const importantUserWords = userWords.filter(w => !STOP_WORDS.has(w) && w.length > 2);
-            const wordsToSearch = importantUserWords.length > 0 ? importantUserWords : userWords;
-
-            let bestMatchKey = null;
-            let maxMatches = 0;
-
-            for (const dbKey in db) {
-                const dbWords = cleanString(dbKey).split(/\s+/);
-                let currentMatches = 0;
-
-                wordsToSearch.forEach(uWord => {
-                    dbWords.forEach(dbWord => {
-                        if (uWord === dbWord) currentMatches += 10;
-                        else if (dbWord.startsWith(uWord) || uWord.startsWith(dbWord)) currentMatches += 8;
-                        else if (Math.abs(uWord.length - dbWord.length) <= 1) {
-                            let errors = 0;
-                            for(let i=0; i < Math.min(uWord.length, dbWord.length); i++) if(uWord[i] !== dbWord[i]) errors++;
-                            if (errors <= 1) currentMatches += 5;
-                        }
-                    });
-                });
-
-                if (currentMatches > maxMatches) {
-                    maxMatches = currentMatches;
-                    bestMatchKey = dbKey;
+        // Алгоритм Левенштейна (считает разницу в буквах)
+        function levenshtein(a, b) {
+            if (a.length === 0) return b.length;
+            if (b.length === 0) return a.length;
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+            for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    const cost = (b.charAt(i - 1) === a.charAt(j - 1)) ? 0 : 1;
+                    matrix[i][j] = Math.min(matrix[i - 1][j - 1] + cost, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
                 }
             }
-            if (maxMatches >= 5) return db[bestMatchKey];
+            return matrix[b.length][a.length];
+        }
+
+        function findBestMatch(userInput, db) {
+            const cleanInput = cleanString(userInput);
+            // Разбиваем запрос на слова
+            const inputWords = cleanInput.split(' ').filter(w => w.length > 0);
+            
+            let bestMatch = null;
+            let bestScore = -100;
+
+            for (const key in db) {
+                const cleanKey = cleanString(key);
+                const keyWords = cleanKey.split(' '); // Слова из базы
+                
+                let currentScore = 0;
+                let matchedWordsCount = 0;
+
+                // --- ГЛАВНАЯ МАГИЯ ---
+                // Мы сравниваем КАЖДОЕ слово запроса с КАЖДЫМ словом ключа
+                
+                inputWords.forEach(inWord => {
+                    // Если это стоп-слово, даем ему очень маленький вес
+                    const isStopWord = STOP_WORDS.includes(inWord);
+                    let bestWordMatchScore = 0;
+
+                    keyWords.forEach(keyWord => {
+                        let score = 0;
+
+                        // 1. Точное совпадение
+                        if (inWord === keyWord) {
+                            score = 1.0; 
+                        }
+                        // 2. Начало слова совпадает ("сдел" -> "сделать")
+                        else if (keyWord.startsWith(inWord) && inWord.length >= 3) {
+                            score = 0.9; 
+                        }
+                        // 3. Опечатки (Левенштейн)
+                        else {
+                            const dist = levenshtein(inWord, keyWord);
+                            const maxLen = Math.max(inWord.length, keyWord.length);
+                            // Если слово длинное (борщ), допускаем 1 ошибку. Если короткое - 0.
+                            if (maxLen > 3 && dist <= 1) score = 0.8; // "сделкть" -> "сделать"
+                            else if (maxLen > 5 && dist <= 2) score = 0.7;
+                        }
+
+                        if (score > bestWordMatchScore) bestWordMatchScore = score;
+                    });
+
+                    // Если это НЕ стоп-слово, оно очень важное (умножаем очки)
+                    if (!isStopWord) {
+                        currentScore += bestWordMatchScore * 2.0; // Вес важных слов
+                    } else {
+                        currentScore += bestWordMatchScore * 0.5; // Вес стоп-слов
+                    }
+                    
+                    if (bestWordMatchScore > 0.5) matchedWordsCount++;
+                });
+
+                // Штраф за лишние слова в ключе (чтобы "борщ" не путался с "борщ с пампушками и водкой")
+                // Но штраф небольшой
+                const lengthDiff = Math.abs(inputWords.length - keyWords.length);
+                currentScore -= lengthDiff * 0.1;
+
+                if (currentScore > bestScore) {
+                    bestScore = currentScore;
+                    bestMatch = key;
+                }
+            }
+            
+            // Отладка в консоль (F12), чтобы ты видел, как он думает
+            console.log(`Input: "${userInput}" | Match: "${bestMatch}" | Score: ${bestScore.toFixed(2)}`);
+            
+            // Порог уверенности.
+            // Если совпало хотя бы одно важное слово (2.0) минус штрафы -> ~1.5
+            if (bestScore > 1.3) return db[bestMatch];
+            
             return null;
         }
 
+        // ==========================================================
+        
         // --- 2. ЗАГРУЗКА (ANTI-CACHE) ---
         async function loadKnowledgeBase() {
             const files = ['chat.json', 'cooking.json', 'technics.json', 'programm.json'];
