@@ -341,13 +341,23 @@
         }
 
         // === 2. ЗАГРУЗКА БАЗЫ ===
+      // === 2. ЗАГРУЗКА БАЗЫ ЗНАНИЙ (С ЗАЩИТОЙ ОТ КЕША) ===
         async function loadKnowledgeBase() {
             const files = ['chat.json', 'cooking.json', 'technics.json', 'programm.json'];
             knowledgeBase = {};
+            
+            // Генерируем уникальную метку времени
+            const timestamp = new Date().getTime(); 
+
             for (const file of files) {
                 try {
-                    const response = await fetch(file);
-                    if (!response.ok) continue;
+                    // Добавляем ?v=время, чтобы браузер думал, что это новый файл
+                    const response = await fetch(file + '?v=' + timestamp);
+                    
+                    if (!response.ok) {
+                        console.warn('Не удалось загрузить:', file);
+                        continue;
+                    }
                     const data = await response.json();
                     for (let key in data) {
                         knowledgeBase[key.toLowerCase().trim()] = data[key];
@@ -356,8 +366,8 @@
                     console.error(`Ошибка загрузки ${file}:`, e);
                 }
             }
+            console.log('База знаний обновлена. Всего вопросов:', Object.keys(knowledgeBase).length);
         }
-
         // === 3. РОУТИНГ ===
         function updateView() {
             const hash = window.location.hash || (currentUserId ? '#ai' : '#login');
