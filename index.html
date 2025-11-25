@@ -248,7 +248,7 @@
         </div>
     </div>
 
-    <script type="module">
+  <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
         import { getDatabase, ref, onValue, push, set, serverTimestamp, update, off, get } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
@@ -275,7 +275,7 @@
         const chatMessages = document.getElementById('chat-messages');
         const chatForm = document.getElementById('chat-form');
         const chatInput = document.getElementById('chat-input');
-        const typingIndicator = document.getElementById('typing-indicator'); // Индикатор
+        const typingIndicator = document.getElementById('typing-indicator');
         
         let currentUserId = null;
         let isAdmin = false;
@@ -284,7 +284,6 @@
         let knowledgeBase = {};
         let subscriptionStatus = { status: 'none' };
         
-        // Фразы для "размышления" (Pro режим)
         const thinkingPhrases = [
             "Анализирую контекст...",
             "Проверяю базу знаний...",
@@ -341,7 +340,7 @@
             return null;
         }
 
-        // === 2. ЗАГРУЗКА БАЗЫ ЗНАНИЙ ===
+        // === 2. ЗАГРУЗКА БАЗЫ ===
         async function loadKnowledgeBase() {
             const files = ['chat.json', 'cooking.json', 'technics.json', 'programm.json'];
             knowledgeBase = {};
@@ -415,11 +414,12 @@
 
         document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-        // === 5. CHAT LOGIC (ОТОБРАЖЕНИЕ) ===
+        // === 5. CHAT LOGIC ===
         function setupChatListeners(uid) {
             onValue(ref(db, `users/${uid}/chats`), (snap) => {
                 userChatsData = snap.val() || {};
                 renderSidebar(userChatsData);
+                // Отрисовываем чат только если он не в процессе анимации (или инициализация)
                 if (currentActiveChatId && userChatsData[currentActiveChatId]) {
                     renderChat(userChatsData[currentActiveChatId]);
                 } else if (!currentActiveChatId && Object.keys(userChatsData).length > 0) {
@@ -434,8 +434,7 @@
         async function createNewChat() {
             if(!currentUserId) return;
             const newRef = push(ref(db, `users/${currentUserId}/chats`));
-            await set(newRef, { title: 'Новый чат', createdAt: serverTimestamp(), messages: [] }); // Messages пустой при старте
-            // Приветствие добавляем сразу
+            await set(newRef, { title: 'Новый чат', createdAt: serverTimestamp(), messages: [] });
             const msgRef = push(ref(db, `users/${currentUserId}/chats/${newRef.key}/messages`));
             await set(msgRef, {role: 'ai', content: 'Привет! Я CatAI.'});
             currentActiveChatId = newRef.key;
@@ -461,63 +460,57 @@
             });
         }
 
-        // Рендеринг сообщений (БЕЗ АНИМАЦИИ ПРИ ЗАГРУЗКЕ ИСТОРИИ)
         function renderChat(chat) {
+            // ВАЖНО: Мы не очищаем чат, если там есть элемент с классом "animating"
+            // Но для простоты (так как onValue вызывается часто), мы просто перерисовываем всё.
+            // Хитрость в том, что мы добавляем новое сообщение в БД только ПОСЛЕ анимации.
+            
             chatMessages.innerHTML = '';
             if(!chat || !chat.messages) return;
             
             Object.values(chat.messages).forEach(msg => {
-                appendMessageToUI(msg.role, msg.content, false); // false = без анимации
+                appendMessageToUI(msg.role, msg.content);
             });
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        // Функция добавления сообщения в UI
-        // animate = true только для нового сообщения от AI в данный момент
-        function appendMessageToUI(role, content, animate = false, typingSpeed = 30) {
+        // Функция добавления в UI (возвращает созданный DIV)
+        function appendMessageToUI(role, content) {
             const isUser = role === 'user';
             const div = document.createElement('div');
             div.className = 'flex items-start space-x-4 mb-4';
-            
-            let innerContent = '';
-            if (animate) {
-                innerContent = '<span class="typing-cursor">|</span>'; // Курсор для анимации
-            } else {
-                innerContent = content; // Сразу текст, если история
-            }
-
             div.innerHTML = `
                 <div class="flex-shrink-0 w-10 h-10 rounded-full ${isUser ? 'bg-indigo-600' : 'bg-blue-600'} flex items-center justify-center text-white font-bold">${isUser?'U':'C'}</div>
                 <div class="flex-1 min-w-0">
                     <p class="font-bold text-white">${isUser ? 'Вы' : 'CatAI'}</p>
-                    <div class="mt-1 text-gray-300 whitespace-pre-wrap break-words message-content">${innerContent}</div>
+                    <div class="mt-1 text-gray-300 whitespace-pre-wrap break-words message-content">${content}</div>
                 </div>
             `;
             chatMessages.appendChild(div);
             chatMessages.scrollTop = chatMessages.scrollHeight;
-
-            if (animate) {
-                const contentDiv = div.querySelector('.message-content');
-                typeWriter(contentDiv, content, typingSpeed);
-            }
+            return div;
         }
 
-        // Анимация печатания (Typewriter)
+        // Анимация печати (возвращает Promise)
         function typeWriter(element, text, speed) {
-            let i = 0;
-            element.innerHTML = ''; // Очищаем курсор перед стартом
-            function type() {
-                if (i < text.length) {
-                    element.innerHTML += text.charAt(i);
-                    i++;
-                    chatMessages.scrollTop = chatMessages.scrollHeight; // Скроллим за текстом
-                    setTimeout(type, speed);
+            return new Promise(resolve => {
+                let i = 0;
+                element.innerHTML = ''; // Очищаем текст перед стартом
+                function type() {
+                    if (i < text.length) {
+                        element.innerHTML += text.charAt(i);
+                        i++;
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                        setTimeout(type, speed);
+                    } else {
+                        resolve(); // Анимация завершена
+                    }
                 }
-            }
-            type();
+                type();
+            });
         }
 
-        // === 6. ЛОГИКА ОТВЕТА (С РАЗМЫШЛЕНИЕМ) ===
+        // === 6. ГЛАВНАЯ ЛОГИКА ОТВЕТА (С ФИКСОМ МИГАНИЯ) ===
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const txt = chatInput.value.trim();
@@ -527,35 +520,33 @@
             const model = document.getElementById('model-select').value;
             chatInput.value = '';
 
-            // 1. Показываем сообщение юзера сразу
+            // 1. Показываем сообщение пользователя и сохраняем его
             await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'user', content: txt });
             
-            // Обновляем заголовок, если первый вопрос
+            // Обновляем заголовок
             const msgs = userChatsData[cid]?.messages || {};
             if (Object.keys(msgs).length <= 1) update(ref(db, `users/${currentUserId}/chats/${cid}`), { title: txt.substring(0,25) });
 
-            // 2. Настройки "думания" и скорости
-            let thinkingTime = 1000; // Базовое время (мс)
-            let typingSpeed = 30;    // Базовая скорость (чем меньше, тем быстрее)
+            // Настройки скорости
+            let thinkingTime = 1000;
+            let typingSpeed = 30; 
             let showThinkingProcess = false;
 
             if (model === 'fast') {
-                thinkingTime = 500;  // Очень быстро думает
-                typingSpeed = 10;    // Пулеметная очередь
+                thinkingTime = 500;
+                typingSpeed = 10;
             } else if (model === 'base') {
-                thinkingTime = 1500; // Средне
-                typingSpeed = 30;    // Комфортно
+                thinkingTime = 1500;
+                typingSpeed = 30;
             } else if (model === 'pro') {
-                thinkingTime = 4000; // Долго "думает"
-                typingSpeed = 50;    // Печатает вальяжно
-                showThinkingProcess = true; // Показываем мысли
+                thinkingTime = 4000;
+                typingSpeed = 50; 
+                showThinkingProcess = true;
             }
 
-            // Показываем индикатор
             typingIndicator.classList.remove('hidden');
             typingIndicator.textContent = "CatAI печатает...";
 
-            // Эмуляция сложного мышления для PRO
             if (showThinkingProcess) {
                 let step = 0;
                 const thinkInterval = setInterval(() => {
@@ -563,24 +554,21 @@
                     step++;
                 }, 800);
 
-                // Останавливаем мысли через thinkingTime
                 setTimeout(() => {
                     clearInterval(thinkInterval);
                     finalizeResponse();
                 }, thinkingTime);
             } else {
-                // Обычная задержка для Fast/Base
                 setTimeout(() => {
                     finalizeResponse();
                 }, thinkingTime);
             }
 
             async function finalizeResponse() {
-                // Подготовка ответа
+                // Подготовка текста ответа
                 let text = '';
                 let prefix = '';
                 
-                // Проверка подписки для Pro
                 if (model === 'pro') {
                     if (subscriptionStatus.status !== 'active') { 
                         text = 'Ошибка: Для этого режима нужна активная PRO подписка.'; 
@@ -601,39 +589,27 @@
                 // Скрываем индикатор
                 typingIndicator.classList.add('hidden');
 
-                // 3. Сохраняем в базу (чтобы осталось в истории)
+                // === ФИКС МИГАНИЯ ЗДЕСЬ ===
+                
+                // 1. Создаем временное сообщение в чате (визуально)
+                // Оно не сохранено в БД, поэтому onValue его не видит
+                const tempMsgDiv = appendMessageToUI('ai', ''); 
+                const contentDiv = tempMsgDiv.querySelector('.message-content');
+                
+                // 2. Запускаем анимацию в этом временном блоке
+                await typeWriter(contentDiv, text, typingSpeed);
+
+                // 3. ТОЛЬКО КОГДА анимация закончилась — сохраняем в базу данных
+                // Как только мы сохраним, Firebase вызовет onValue -> renderChat.
+                // renderChat перерисует весь чат заново.
+                // Пользователь увидит подмену, но так как текст одинаковый, скачка не будет.
                 await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: text });
-                
-                // ВАЖНО: onValue (слушатель) сам отрисует сообщение.
-                // Но чтобы сделать анимацию, нам нужно перехватить этот момент.
-                // Firebase сработает быстро. Анимация запустится при обновлении renderChat.
-                
-                // Чтобы анимация работала ТОЛЬКО для нового сообщения, 
-                // мы сделали renderChat хитрым: он просто перерисовывает всё без анимации.
-                // Анимация нужна только "вживую".
-                // Поэтому мы ВРУЧНУЮ вызовем анимацию последнего сообщения здесь,
-                // Но так как Firebase реактивен, проще всего просто позволить ему обновить чат,
-                // А анимацию сделать визуальным обманом. 
-                
-                // УПРОЩЕНИЕ ДЛЯ ВАС:
-                // Мы удалим последнее сообщение из DOM (которое добавил Firebase render) и перепечатаем его красиво.
-                setTimeout(() => {
-                    const lastMsg = chatMessages.lastElementChild;
-                    if (lastMsg) {
-                        const contentDiv = lastMsg.querySelector('.message-content');
-                        // Если это AI сообщение
-                        if (contentDiv && lastMsg.innerHTML.includes('CatAI')) {
-                            // Запускаем печатную машинку
-                            typeWriter(contentDiv, text, typingSpeed);
-                        }
-                    }
-                }, 100); 
             }
         });
 
         document.getElementById('new-chat-btn').addEventListener('click', createNewChat);
 
-        // === 7. SUBSCRIPTION & MODALS ===
+        // === 7. ПОДПИСКИ И МОДАЛКИ ===
         function setupSubscriptionListener(uid) {
             onValue(ref(db, `users/${uid}/subscription`), s => {
                 subscriptionStatus = s.val() || { status: 'none' };
