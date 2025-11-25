@@ -6,7 +6,7 @@
     <title>CatAI Interface</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Сброс стилей для списков (Фикс "улетающего" сайдбара) */
+        /* ВАЖНО: Убираем точки и отступы у списков, чтобы сайдбар был ровным */
         ul, li {
             list-style: none !important;
             margin: 0;
@@ -282,50 +282,79 @@
         let currentActiveChatId = null;
         let knowledgeBase = {};
         let subscriptionStatus = { status: 'none' };
-        let purchaseListener = null;
 
-        // === 1. ЛОКАЛЬНАЯ БАЗА ЗНАНИЙ ===
-      // === 1. ЗАГРУЗКА БАЗЫ ЗНАНИЙ ИЗ НЕСКОЛЬКИХ ФАЙЛОВ ===
+        // === 1. ЛЕВЕНШТЕЙН И УМНЫЙ ПОИСК ===
+        function levenshtein(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+            for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) { matrix[i][j] = matrix[i - 1][j - 1]; }
+                    else { matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1); }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        function findBestMatch(userInput, db) {
+            const normalizedInput = userInput.toLowerCase().trim().replace(/[\?\!\.\,]/g, '');
+            const inputWords = normalizedInput.split(' ');
+            let bestMatch = null;
+            let bestScore = 0;
+
+            for (const key in db) {
+                const normalizedKey = key.toLowerCase();
+                let currentScore = 0;
+                
+                // Проверка корней слов (для "свар" -> "сварить")
+                const keyWords = normalizedKey.split(' ');
+                let wordsMatchCount = 0;
+                inputWords.forEach(inWord => {
+                    if (inWord.length < 3) return; 
+                    keyWords.forEach(keyWord => {
+                        if (keyWord.startsWith(inWord)) wordsMatchCount++;
+                    });
+                });
+
+                // Левенштейн
+                const distance = levenshtein(normalizedInput, normalizedKey);
+                const maxLength = Math.max(normalizedInput.length, normalizedKey.length);
+                const similarity = 1 - (distance / maxLength);
+
+                currentScore = similarity + (wordsMatchCount * 0.5); 
+
+                if (currentScore > bestScore) {
+                    bestScore = currentScore;
+                    bestMatch = key;
+                }
+            }
+            // Порог уверенности
+            if (bestScore > 0.45) return db[bestMatch];
+            return null;
+        }
+
+        // === 2. ЗАГРУЗКА БАЗЫ ЗНАНИЙ (ВСЕ ФАЙЛЫ) ===
         async function loadKnowledgeBase() {
-            // Список файлов для загрузки
             const files = ['chat.json', 'cooking.json', 'technics.json', 'programm.json'];
+            knowledgeBase = {};
             
-            knowledgeBase = {}; // Очищаем базу перед загрузкой
-            let loadedCount = 0;
-
-            console.log('Начинаю загрузку баз знаний...');
-
-            // Проходим по каждому файлу из списка
             for (const file of files) {
                 try {
                     const response = await fetch(file);
-                    if (!response.ok) {
-                        console.warn(`Не удалось загрузить файл: ${file}`);
-                        continue; // Пропускаем файл, если ошибка, и идем к следующему
-                    }
-                    
+                    if (!response.ok) continue;
                     const data = await response.json();
-                    
-                    // Добавляем данные в общую базу
                     for (let key in data) {
-                        // Нормализуем ключ: нижний регистр, убираем знаки препинания
-                        const normalizedKey = key.toLowerCase().trim().replace(/[\?\!\.\,]/g, '');
-                        knowledgeBase[normalizedKey] = data[key];
+                        knowledgeBase[key.toLowerCase().trim()] = data[key];
                     }
-                    
-                    console.log(`✅ Успешно загружен: ${file}`);
-                    loadedCount++;
-                    
                 } catch (e) {
-                    console.error(`Ошибка при чтении ${file}:`, e);
+                    console.error(`Ошибка загрузки ${file}:`, e);
                 }
             }
-            
-            const totalQuestions = Object.keys(knowledgeBase).length;
-            console.log(`Всего загружено вопросов: ${totalQuestions} из ${loadedCount} файлов.`);
+            console.log('База знаний загружена. Всего записей:', Object.keys(knowledgeBase).length);
         }
 
-        // === 2. РОУТИНГ ===
+        // === 3. РОУТИНГ ===
         function updateView() {
             const hash = window.location.hash || (currentUserId ? '#ai' : '#login');
             pages.forEach(p => p.classList.add('hidden'));
@@ -338,7 +367,7 @@
         }
         window.addEventListener('hashchange', updateView);
 
-        // === 3. AUTH ===
+        // === 4. AUTH (С обработкой ошибок) ===
         onAuthStateChanged(auth, async (user) => {
             currentUserId = user ? user.uid : null;
             if (user) {
@@ -359,9 +388,15 @@
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const errorText = document.getElementById('login-error');
+            errorText.textContent = '';
             try {
                 await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value);
-            } catch (e) { document.getElementById('login-error').textContent = 'Ошибка входа'; }
+            } catch (error) {
+                 if (error.code === 'auth/wrong-password') errorText.textContent = 'Неверный пароль.';
+                 else if (error.code === 'auth/user-not-found') errorText.textContent = 'Пользователь не найден.';
+                 else errorText.textContent = 'Ошибка: ' + error.message;
+            }
         });
 
         registerForm.addEventListener('submit', async (e) => {
@@ -375,7 +410,7 @@
 
         document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-        // === 4. CHAT LOGIC (SIDEBAR FIX) ===
+        // === 5. CHAT LOGIC (SIDEBAR FIX) ===
         function setupChatListeners(uid) {
             onValue(ref(db, `users/${uid}/chats`), (snap) => {
                 userChatsData = snap.val() || {};
@@ -402,19 +437,16 @@
             chatHistoryList.innerHTML = '';
             Object.entries(data).forEach(([id, chat]) => {
                 const li = document.createElement('li');
-                // Используем <a> с правильными классами Tailwind для блочного отображения
                 const a = document.createElement('a');
                 a.href = '#';
                 a.dataset.id = id;
                 a.textContent = chat.title || 'Чат';
                 const isActive = id === currentActiveChatId;
-                // Ключевой фикс: block, w-full, truncate
                 a.className = `block w-full text-left px-3 py-2 text-sm rounded-md truncate transition ${isActive ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`;
-                
                 a.onclick = (e) => {
                     e.preventDefault();
                     currentActiveChatId = id;
-                    renderSidebar(userChatsData); // Обновить выделение
+                    renderSidebar(userChatsData);
                     renderChat(userChatsData[id]);
                 };
                 li.appendChild(a);
@@ -441,9 +473,8 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        // === 5. AI RESPONSE (LOCAL JSON) ===
+        // === 6. AI RESPONSE (УМНЫЙ ОТВЕТ) ===
         async function getAIResponse(input, chatId, model) {
-            const key = input.toLowerCase().trim().replace(/[\?\!\.\,]/g, '');
             let text = '';
             let prefix = model === 'base' ? '(Base): ' : (model === 'fast' ? '(Fast): ' : '');
             
@@ -453,7 +484,8 @@
             }
 
             if (!text) {
-                text = knowledgeBase[key] ? (prefix + knowledgeBase[key]) : (prefix + 'Я не знаю ответа. Проверьте knowledge.json.');
+                const answer = findBestMatch(input, knowledgeBase);
+                text = answer ? (prefix + answer) : (prefix + 'Я не понял вопрос. Попробуйте иначе.');
             }
 
             push(ref(db, `users/${currentUserId}/chats/${chatId}/messages`), { role: 'ai', content: text });
@@ -467,10 +499,8 @@
             const model = document.getElementById('model-select').value;
             chatInput.value = '';
 
-            // Сохраняем сообщение пользователя
             await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'user', content: txt });
             
-            // Обновляем заголовок, если это первое сообщение
             const msgs = userChatsData[cid]?.messages || {};
             if (Object.keys(msgs).length <= 1) update(ref(db, `users/${currentUserId}/chats/${cid}`), { title: txt.substring(0,25) });
 
@@ -483,7 +513,7 @@
 
         document.getElementById('new-chat-btn').addEventListener('click', createNewChat);
 
-        // === 6. SUBSCRIPTION & MODALS ===
+        // === 7. SUBSCRIPTION & MODALS ===
         function setupSubscriptionListener(uid) {
             onValue(ref(db, `users/${uid}/subscription`), s => {
                 subscriptionStatus = s.val() || { status: 'none' };
@@ -493,11 +523,8 @@
             });
         }
 
-        // Логика модалок (упрощена для краткости)
         const modal = document.getElementById('models-modal');
-        const adminM = document.getElementById('admin-modal');
         const pBtn = document.getElementById('purchase-btn');
-        
         document.getElementById('models-btn').addEventListener('click', () => window.location.hash = '#models');
         document.getElementById('close-modal-btn').addEventListener('click', () => { window.location.hash = '#ai'; modal.classList.add('hidden'); });
         document.getElementById('close-admin-modal-btn').addEventListener('click', () => window.location.hash = '#ai');
@@ -549,7 +576,6 @@
             });
         }
         
-        // Глобальные функции для кнопок админки (костыль для module scope)
         window.confirmReq = async (rid, uid, model, limit) => {
             await set(ref(db, `users/${uid}/subscription`), { status: 'active', model, limit });
             await update(ref(db, `purchaseRequests/${rid}`), { status: 'confirmed' });
