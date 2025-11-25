@@ -6,37 +6,21 @@
     <title>CatAI Interface</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Сброс стилей списков (Фикс сайдбара) */
-        ul, li {
-            list-style: none !important;
-            margin: 0;
-            padding: 0;
-        }
-
+        /* Сброс стилей для списков */
+        ul, li { list-style: none !important; margin: 0; padding: 0; }
         /* Прячем стрелки select */
-        select {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
-
+        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
         /* Скроллбары */
         #chat-messages::-webkit-scrollbar { width: 8px; }
         #chat-messages::-webkit-scrollbar-track { background: #2d3748; }
         #chat-messages::-webkit-scrollbar-thumb { background-color: #4a5568; border-radius: 20px; }
-
         #chat-history-list::-webkit-scrollbar { width: 6px; }
         #chat-history-list::-webkit-scrollbar-track { background: #1a202c; }
         #chat-history-list::-webkit-scrollbar-thumb { background-color: #4a5568; border-radius: 20px; }
-        
         /* Курсор при печати */
         .typing-cursor {
-            display: inline-block;
-            width: 2px;
-            height: 1em;
-            background-color: white;
-            animation: blink 1s step-end infinite;
-            vertical-align: middle;
+            display: inline-block; width: 2px; height: 1em; background-color: white;
+            animation: blink 1s step-end infinite; vertical-align: middle;
         }
         @keyframes blink { 50% { opacity: 0; } }
     </style>
@@ -80,7 +64,7 @@
             <ul id="chat-history-list" class="flex-1 overflow-y-auto space-y-1 p-4 block"></ul>
             <div class="border-t border-gray-700 p-4">
                  <a href="#models" id="models-btn" class="flex items-center px-3 py-2 text-sm font-medium rounded text-gray-400 hover:bg-gray-800 hover:text-white mb-2 transition">
-                    <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 2a1 1 0 00-1 1v1h1a1 1 0 010 2H4v1a1 1 0 001 1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1V9a1 1 0 011-1h2a1 1 0 001-1V6h-1a1 1 0 110-2h1V3a1 1 0 00-1-1H5zM2 13v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1H3a1 1 0 00-1 1zm14 0v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1h-3a1 1 0 00-1 1z" clip-rule="evenodd"/></svg> Модели
+                    <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 2a1 1 0 00-1 1v1h1a1 1 0 010 2H4v1a1 1 0 001 1h2a1 1 0 011 1v2a1 1 0 001-1V9a1 1 0 011-1h2a1 1 0 001-1V6h-1a1 1 0 110-2h1V3a1 1 0 00-1-1H5zM2 13v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1H3a1 1 0 00-1 1zm14 0v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1h-3a1 1 0 00-1 1z" clip-rule="evenodd"/></svg> Модели
                 </a>
                  <a href="#admin" id="admin-panel-btn" class="hidden flex items-center px-3 py-2 text-sm font-medium rounded text-yellow-400 hover:bg-gray-800 hover:text-white mb-2 transition">
                       <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/></svg> Админ
@@ -192,11 +176,9 @@
         
         const thinkingPhrases = ["Анализирую контекст...", "Проверяю базу знаний...", "Формирую структуру...", "Уточняю детали...", "Оптимизирую ответ..."];
 
-       // ==========================================================
-        // === УМНЫЙ ПОИСК 5.0 (ЖЕЛЕЗОБЕТОННЫЙ) ===
         // ==========================================================
-
-        // 1. Список слов, которые мы ИГНОРИРУЕМ (Мусорные слова)
+        // === 1. УМНЫЙ ПОИСК 5.0 (ПО КЛЮЧЕВЫМ СЛОВАМ) ===
+        // ==========================================================
         const STOP_WORDS = new Set([
             'как', 'сделать', 'приготовить', 'сварить', 'пожарить', 'зажарить', 
             'испечь', 'запечь', 'сварганить', 'замутить', 'сообразить', 'намутить',
@@ -211,116 +193,35 @@
         }
 
         function findBestMatch(userInput, db) {
-            // 1. Разбиваем запрос юзера на важные слова (токенизация)
             const userWords = cleanString(userInput).split(/\s+/);
-            
-            // Оставляем только те слова, которых НЕТ в стоп-листе и которые длиннее 2 букв
-            // Пример: "как сварить борщ" -> ["борщ"]
             const importantUserWords = userWords.filter(w => !STOP_WORDS.has(w) && w.length > 2);
-
-            // Если юзер написал только мусор (например "как сделать?"), ищем по всему тексту
             const wordsToSearch = importantUserWords.length > 0 ? importantUserWords : userWords;
 
             let bestMatchKey = null;
             let maxMatches = 0;
 
-            // 2. Пробегаем по всей базе
             for (const dbKey in db) {
                 const dbWords = cleanString(dbKey).split(/\s+/);
-                
-                // Считаем, сколько ВАЖНЫХ слов совпало
                 let currentMatches = 0;
 
                 wordsToSearch.forEach(uWord => {
                     dbWords.forEach(dbWord => {
-                        // Точное совпадение (борщ == борщ)
-                        if (uWord === dbWord) {
-                            currentMatches += 10; // Жирный плюс
-                        }
-                        // Совпадение корней (борща == борщ)
-                        else if (dbWord.startsWith(uWord) || uWord.startsWith(dbWord)) {
-                            currentMatches += 8;
-                        }
-                        // Опечатка (сделкть == сделать) - допускаем 1 ошибку
+                        if (uWord === dbWord) currentMatches += 10;
+                        else if (dbWord.startsWith(uWord) || uWord.startsWith(dbWord)) currentMatches += 8;
                         else if (Math.abs(uWord.length - dbWord.length) <= 1) {
-                            // Простая проверка на опечатки (без Левенштейна для скорости)
                             let errors = 0;
-                            for(let i=0; i < Math.min(uWord.length, dbWord.length); i++) {
-                                if(uWord[i] !== dbWord[i]) errors++;
-                            }
+                            for(let i=0; i < Math.min(uWord.length, dbWord.length); i++) if(uWord[i] !== dbWord[i]) errors++;
                             if (errors <= 1) currentMatches += 5;
                         }
                     });
                 });
 
-                // Если этот ключ набрал больше очков, чем предыдущий лидер
                 if (currentMatches > maxMatches) {
                     maxMatches = currentMatches;
                     bestMatchKey = dbKey;
                 }
             }
-
-            console.log(`Запрос: "${userInput}" | Ключевые слова: [${wordsToSearch}] | Найдено: "${bestMatchKey}" (${maxMatches})`);
-
-            // Порог срабатывания (должно совпасть хотя бы одно слово или корень)
-            if (maxMatches >= 5) {
-                return db[bestMatchKey];
-            }
-            
-            return null;
-        }
-
-        function cleanString(str) {
-            return str.toLowerCase().trim().replace(/[\?\!\.\,\(\)\-\:]/g, '');
-        }
-
-        function levenshtein(a, b) {
-            if (a.length === 0) return b.length;
-            if (b.length === 0) return a.length;
-            const matrix = [];
-            for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-            for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-            for (let i = 1; i <= b.length; i++) {
-                for (let j = 1; j <= a.length; j++) {
-                    const cost = (b.charAt(i - 1) === a.charAt(j - 1)) ? 0 : 1;
-                    matrix[i][j] = Math.min(matrix[i - 1][j - 1] + cost, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
-                }
-            }
-            return matrix[b.length][a.length];
-        }
-
-        function findBestMatch(userInput, db) {
-            const cleanInput = cleanString(userInput);
-            const inputWords = cleanInput.split(' ').filter(w => w.length > 2);
-            let bestMatch = null;
-            let bestScore = -100;
-
-            for (const key in db) {
-                const cleanKey = cleanString(key);
-                const keyWords = cleanKey.split(' ').filter(w => !STOP_WORDS.includes(w));
-                let currentScore = 0;
-
-                inputWords.forEach(inWord => {
-                    keyWords.forEach(keyWord => {
-                        if (inWord.startsWith(keyWord.slice(0, -1)) || keyWord.startsWith(inWord.slice(0, -1))) {
-                            currentScore += 1.5; 
-                        } else if (levenshtein(inWord, keyWord) <= 1) {
-                             currentScore += 1.0;
-                        }
-                    });
-                });
-
-                const distance = levenshtein(cleanInput, cleanKey);
-                const maxLength = Math.max(cleanInput.length, cleanKey.length);
-                const similarity = 1 - (distance / maxLength);
-                currentScore += similarity;
-
-                if (currentScore > bestScore) {
-                    bestScore = currentScore;
-                    bestMatch = key;
-                }
-            }
-            if (bestScore > 1.1) return db[bestMatch];
+            if (maxMatches >= 5) return db[bestMatchKey];
             return null;
         }
 
@@ -383,7 +284,7 @@
         });
         document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-        // --- 5. CHAT ---
+        // --- 5. CHAT & ANIMATION ---
         function setupChatListeners(uid) {
             onValue(ref(db, `users/${uid}/chats`), (snap) => {
                 userChatsData = snap.val() || {};
@@ -437,31 +338,25 @@
             return div;
         }
 
-        // --- АНИМАЦИЯ (С ПРОПУСКОМ ТЕГОВ) ---
         function typeWriter(element, text, speed) {
             return new Promise(resolve => {
                 let i = 0;
-                element.innerHTML = '<span class="typing-cursor"></span>'; // Курсор
+                element.innerHTML = '<span class="typing-cursor"></span>';
                 function type() {
                     if (i < text.length) {
                         const char = text.charAt(i);
-                        // Убираем курсор, вставляем символ, возвращаем курсор
                         let currentHTML = element.innerHTML.replace('<span class="typing-cursor"></span>', '');
-                        
                         if (char === '<') {
                             let tag = '';
                             while (text.charAt(i) !== '>' && i < text.length) { tag += text.charAt(i); i++; }
                             tag += '>'; i++;
                             currentHTML += tag;
-                        } else {
-                            currentHTML += char;
-                            i++;
-                        }
+                        } else { currentHTML += char; i++; }
                         element.innerHTML = currentHTML + '<span class="typing-cursor"></span>';
                         chatMessages.scrollTop = chatMessages.scrollHeight;
                         setTimeout(type, speed);
                     } else {
-                        element.innerHTML = element.innerHTML.replace('<span class="typing-cursor"></span>', ''); // Удаляем курсор
+                        element.innerHTML = element.innerHTML.replace('<span class="typing-cursor"></span>', '');
                         resolve();
                     }
                 }
@@ -508,14 +403,10 @@
                 }
 
                 typingIndicator.classList.add('hidden');
-
-                // ФИКС МИГАНИЯ: Сначала анимация во временный блок
                 const tempDiv = appendMessageToUI('ai', '');
                 const contentDiv = tempDiv.querySelector('.message-content');
                 
                 await typeWriter(contentDiv, text, typingSpeed);
-
-                // Потом сохраняем в БД (onValue обновит чат незаметно для глаза)
                 await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: text });
             }
         });
