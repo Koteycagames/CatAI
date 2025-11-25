@@ -646,21 +646,22 @@
 
         // === ЛОГИКА ЧАТА (РЕНДЕРИНГ) ===
        
-        function renderSidebar(chatsData) {
-            chatHistoryList.innerHTML = '';
-            if (!chatsData) return;
+       function renderSidebar(chatsData) {
+    chatHistoryList.innerHTML = '';
+    if (!chatsData) return;
 
-            Object.entries(chatsData).forEach(([chatId, chatData]) => {
-                const li = document.createElement('li');
-                const a = document.createElement('a');
-                a.href = '#';
-                a.dataset.chatId = chatId;
-                a.textContent = chatData.title || 'Новый чат';
-                a.className = `block px-3 py-2 text-sm rounded-md truncate ${chatId === currentActiveChatId ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`;
-                li.appendChild(a);
-                chatHistoryList.appendChild(li);
-            });
-        }
+    Object.entries(chatsData).forEach(([chatId, chatData]) => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#';
+        a.dataset.chatId = chatId;
+        a.textContent = chatData.title || 'Новый чат';
+        // УБЕДИТЕСЬ, ЧТО КЛАССЫ ПРИМЕНЕНЫ ЗДЕСЬ
+        a.className = `block px-3 py-2 text-sm rounded-md truncate ${chatId === currentActiveChatId ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`;
+        li.appendChild(a);
+        chatHistoryList.appendChild(li);
+    });
+}
 
         function renderChat(chatData) {
             chatMessages.innerHTML = '';
