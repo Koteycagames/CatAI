@@ -5,36 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CatAI Interface</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Прячем нативные стрелки у <select> */
-        select {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
-        /* Стилизация скроллбара */
-        #chat-messages::-webkit-scrollbar {
-            width: 8px; /* Ширина */
-        }
-        #chat-messages::-webkit-scrollbar-track {
-            background: #2d3748; /* Цвет фона трека */
-        }
-        #chat-messages::-webkit-scrollbar-thumb {
-            background-color: #4a5568; /* Цвет ползунка */
-            border-radius: 20px; /* Скругление */
-        }
-        /* Стилизация скроллбара для сайдбара */
-        #chat-history-list::-webkit-scrollbar {
-            width: 6px;
-        }
-        #chat-history-list::-webkit-scrollbar-track {
-            background: #1a202c; 
-        }
-        #chat-history-list::-webkit-scrollbar-thumb {
-            background-color: #4a5568;
-            border-radius: 20px;
-        }
-    </style>
+   <style>
+    /* Прячем нативные стрелки у <select> */
+    select {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+    
+    /* НОВЫЙ СТИЛЬ ДЛЯ САЙДБАРА */
+    #chat-history-list {
+        list-style: none; 
+        padding: 0;         
+        margin: 0;
+    }
+
+    /* Стилизация скроллбара */
+    #chat-messages::-webkit-scrollbar {
+        width: 8px; /* Ширина */
+    }
+    #chat-messages::-webkit-scrollbar-track {
+        background: #2d3748; /* Цвет фона трека */
+    }
+    #chat-messages::-webkit-scrollbar-thumb {
+        background-color: #4a5568; /* Цвет ползунка */
+        border-radius: 20px; /* Скругление */
+    }
+    /* Стилизация скроллбара для сайдбара */
+    #chat-history-list::-webkit-scrollbar {
+        width: 6px;
+    }
+    #chat-history-list::-webkit-scrollbar-track {
+        background: #1a202c;  
+    }
+    #chat-history-list::-webkit-scrollbar-thumb {
+        background-color: #4a5568;
+        border-radius: 20px;
+    }
+</style>
 </head>
 <body class="bg-gray-900 text-white h-full overflow-hidden">
 
