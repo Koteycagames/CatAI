@@ -285,18 +285,44 @@
         let purchaseListener = null;
 
         // === 1. ЛОКАЛЬНАЯ БАЗА ЗНАНИЙ ===
+      // === 1. ЗАГРУЗКА БАЗЫ ЗНАНИЙ ИЗ НЕСКОЛЬКИХ ФАЙЛОВ ===
         async function loadKnowledgeBase() {
-            try {
-                const response = await fetch('knowledge.json');
-                if (!response.ok) throw new Error('File not found');
-                const data = await response.json();
-                knowledgeBase = {};
-                for (let k in data) knowledgeBase[k.toLowerCase().trim().replace(/[\?\!\.\,]/g, '')] = data[k];
-                console.log('Knowledge base loaded:', Object.keys(knowledgeBase).length);
-            } catch (e) {
-                console.error('KB Error:', e);
-                knowledgeBase = {};
+            // Список файлов для загрузки
+            const files = ['chat.json', 'cooking.json', 'technics.json', 'programm.json'];
+            
+            knowledgeBase = {}; // Очищаем базу перед загрузкой
+            let loadedCount = 0;
+
+            console.log('Начинаю загрузку баз знаний...');
+
+            // Проходим по каждому файлу из списка
+            for (const file of files) {
+                try {
+                    const response = await fetch(file);
+                    if (!response.ok) {
+                        console.warn(`Не удалось загрузить файл: ${file}`);
+                        continue; // Пропускаем файл, если ошибка, и идем к следующему
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Добавляем данные в общую базу
+                    for (let key in data) {
+                        // Нормализуем ключ: нижний регистр, убираем знаки препинания
+                        const normalizedKey = key.toLowerCase().trim().replace(/[\?\!\.\,]/g, '');
+                        knowledgeBase[normalizedKey] = data[key];
+                    }
+                    
+                    console.log(`✅ Успешно загружен: ${file}`);
+                    loadedCount++;
+                    
+                } catch (e) {
+                    console.error(`Ошибка при чтении ${file}:`, e);
+                }
             }
+            
+            const totalQuestions = Object.keys(knowledgeBase).length;
+            console.log(`Всего загружено вопросов: ${totalQuestions} из ${loadedCount} файлов.`);
         }
 
         // === 2. РОУТИНГ ===
