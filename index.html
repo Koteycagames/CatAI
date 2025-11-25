@@ -6,43 +6,39 @@
     <title>CatAI Interface</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* ВАЖНО: Убираем точки и отступы у списков, чтобы сайдбар был ровным */
+        /* Сброс стилей списков (Фикс сайдбара) */
         ul, li {
             list-style: none !important;
             margin: 0;
             padding: 0;
         }
 
-        /* Прячем нативные стрелки у <select> */
+        /* Прячем стрелки select */
         select {
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
         }
 
-        /* Стилизация скроллбара (Сообщения) */
-        #chat-messages::-webkit-scrollbar {
-            width: 8px;
-        }
-        #chat-messages::-webkit-scrollbar-track {
-            background: #2d3748;
-        }
-        #chat-messages::-webkit-scrollbar-thumb {
-            background-color: #4a5568;
-            border-radius: 20px;
-        }
+        /* Скроллбары */
+        #chat-messages::-webkit-scrollbar { width: 8px; }
+        #chat-messages::-webkit-scrollbar-track { background: #2d3748; }
+        #chat-messages::-webkit-scrollbar-thumb { background-color: #4a5568; border-radius: 20px; }
 
-        /* Стилизация скроллбара (Сайдбар) */
-        #chat-history-list::-webkit-scrollbar {
-            width: 6px;
+        #chat-history-list::-webkit-scrollbar { width: 6px; }
+        #chat-history-list::-webkit-scrollbar-track { background: #1a202c; }
+        #chat-history-list::-webkit-scrollbar-thumb { background-color: #4a5568; border-radius: 20px; }
+        
+        /* Курсор при печати */
+        .typing-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background-color: white;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
         }
-        #chat-history-list::-webkit-scrollbar-track {
-            background: #1a202c;  
-        }
-        #chat-history-list::-webkit-scrollbar-thumb {
-            background-color: #4a5568;
-            border-radius: 20px;
-        }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body class="bg-gray-900 text-white h-full overflow-hidden">
@@ -51,22 +47,12 @@
         <div class="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-lg">
             <h2 class="text-3xl font-bold text-center text-white">Вход в CatAI</h2>
             <form id="login-form" class="space-y-6">
-                <div>
-                    <label for="login-email" class="text-sm font-medium text-gray-300 block mb-2">Email</label>
-                    <input type="email" id="login-email" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                </div>
-                <div>
-                    <label for="login-password" class="text-sm font-medium text-gray-300 block mb-2">Пароль</label>
-                    <input type="password" id="login-password" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                </div>
-                <button type="submit" class="w-full px-4 py-2 font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition">
-                    Войти
-                </button>
+                <div><label class="text-sm text-gray-300 block mb-2">Email</label><input type="email" id="login-email" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:ring-2 focus:ring-blue-500" required></div>
+                <div><label class="text-sm text-gray-300 block mb-2">Пароль</label><input type="password" id="login-password" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:ring-2 focus:ring-blue-500" required></div>
+                <button type="submit" class="w-full px-4 py-2 font-bold text-white bg-blue-600 rounded hover:bg-blue-700 transition">Войти</button>
             </form>
             <p id="login-error" class="text-sm text-red-500 text-center"></p>
-            <p class="text-sm text-center text-gray-400">
-                Нет аккаунта? <a href="#register" class="font-medium text-blue-500 hover:text-blue-400">Регистрация</a>
-            </p>
+            <p class="text-center text-sm text-gray-400">Нет аккаунта? <a href="#register" class="text-blue-500 hover:text-blue-400">Регистрация</a></p>
         </div>
     </section>
 
@@ -74,181 +60,101 @@
         <div class="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-lg">
             <h2 class="text-3xl font-bold text-center text-white">Регистрация</h2>
             <form id="register-form" class="space-y-6">
-                <div>
-                    <label for="register-email" class="text-sm font-medium text-gray-300 block mb-2">Email</label>
-                    <input type="email" id="register-email" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                </div>
-                <div>
-                    <label for="register-password" class="text-sm font-medium text-gray-300 block mb-2">Пароль</label>
-                    <input type="password" id="register-password" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                </div>
-                <div>
-                    <label for="register-password-confirm" class="text-sm font-medium text-gray-300 block mb-2">Повторите Пароль</label>
-                    <input type="password" id="register-password-confirm" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                </div>
-                <button type="submit" class="w-full px-4 py-2 font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition">
-                    Зарегистрироваться
-                </button>
+                <div><label class="text-sm text-gray-300 block mb-2">Email</label><input type="email" id="register-email" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:ring-2 focus:ring-blue-500" required></div>
+                <div><label class="text-sm text-gray-300 block mb-2">Пароль</label><input type="password" id="register-password" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:ring-2 focus:ring-blue-500" required></div>
+                <div><label class="text-sm text-gray-300 block mb-2">Повтор</label><input type="password" id="register-password-confirm" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:ring-2 focus:ring-blue-500" required></div>
+                <button type="submit" class="w-full px-4 py-2 font-bold text-white bg-blue-600 rounded hover:bg-blue-700 transition">Зарегистрироваться</button>
             </form>
             <p id="register-error" class="text-sm text-red-500 text-center"></p>
-            <p class="text-sm text-center text-gray-400">
-                Уже есть аккаунт? <a href="#login" class="font-medium text-blue-500 hover:text-blue-400">Войти</a>
-            </p>
+            <p class="text-center text-sm text-gray-400">Есть аккаунт? <a href="#login" class="text-blue-500 hover:text-blue-400">Войти</a></p>
         </div>
     </section>
 
     <section id="ai" class="page hidden h-full flex overflow-hidden">
-        
         <div class="flex-shrink-0 w-64 bg-gray-950 flex flex-col border-r border-gray-700">
             <div class="p-4 border-b border-gray-700">
-                <button id="new-chat-btn" class="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-left text-white bg-gray-800 rounded-md hover:bg-gray-700 transition border border-gray-600">
-                    Новый чат
-                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
+                <button id="new-chat-btn" class="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-left text-white bg-gray-800 rounded hover:bg-gray-700 border border-gray-600 transition">
+                    Новый чат <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                 </button>
             </div>
-            
-            <ul id="chat-history-list" class="flex-1 overflow-y-auto space-y-1 p-4 block">
-                </ul>
-            
+            <ul id="chat-history-list" class="flex-1 overflow-y-auto space-y-1 p-4 block"></ul>
             <div class="border-t border-gray-700 p-4">
-                 <a href="#models" id="models-btn" class="flex w-full items-center px-3 py-2 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800 hover:text-white mb-2 transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M5 2a1 1 0 00-1 1v1h1a1 1 0 010 2H4v1a1 1 0 001 1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1V9a1 1 0 011-1h2a1 1 0 001-1V6h-1a1 1 0 110-2h1V3a1 1 0 00-1-1H5zM2 13v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1H3a1 1 0 00-1 1zm14 0v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1h-3a1 1 0 00-1 1z" clip-rule="evenodd" />
-                    </svg>
-                    Модели
+                 <a href="#models" id="models-btn" class="flex items-center px-3 py-2 text-sm font-medium rounded text-gray-400 hover:bg-gray-800 hover:text-white mb-2 transition">
+                    <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 2a1 1 0 00-1 1v1h1a1 1 0 010 2H4v1a1 1 0 001 1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1V9a1 1 0 011-1h2a1 1 0 001-1V6h-1a1 1 0 110-2h1V3a1 1 0 00-1-1H5zM2 13v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1H3a1 1 0 00-1 1zm14 0v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1h-3a1 1 0 00-1 1z" clip-rule="evenodd"/></svg> Модели
                 </a>
-                 <a href="#admin" id="admin-panel-btn" class="hidden flex w-full items-center px-3 py-2 text-sm font-medium rounded-md text-yellow-400 hover:bg-gray-800 hover:text-white mb-2 transition">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                          <path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd" />
-                      </svg>
-                      Админ-панель
+                 <a href="#admin" id="admin-panel-btn" class="hidden flex items-center px-3 py-2 text-sm font-medium rounded text-yellow-400 hover:bg-gray-800 hover:text-white mb-2 transition">
+                      <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a4 4 0 100 8 4 4 0 000-8z" clip-rule="evenodd"/></svg> Админ
                  </a>
-                 <a href="#login" id="logout-btn" class="flex w-full items-center px-3 py-2 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800 hover:text-white transition">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V5.414L12.586 14 14 12.586 5.414 4H16a1 1 0 100-2H4a1 1 0 00-1 1z" clip-rule="evenodd" />
-                      </svg>
-                      Выйти
+                 <a href="#login" id="logout-btn" class="flex items-center px-3 py-2 text-sm font-medium rounded text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                      <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V5.414L12.586 14 14 12.586 5.414 4H16a1 1 0 100-2H4a1 1 0 00-1 1z" clip-rule="evenodd"/></svg> Выйти
                  </a>
             </div>
         </div>
         
         <div class="flex-1 flex flex-col overflow-hidden relative">
-            <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-6">
-                </div>
-            
-            <div id="typing-indicator" class="hidden px-6 py-2 text-sm text-gray-400 absolute bottom-20 left-0">
-                CatAI печатает...
-            </div>
-            
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-6"></div>
+            <div id="typing-indicator" class="hidden px-6 py-2 text-sm text-gray-400 absolute bottom-20 left-0">CatAI печатает...</div>
             <div class="p-6 border-t border-gray-700 bg-gray-900">
                 <form id="chat-form" class="flex items-center space-x-4">
                     <div class="relative">
-                        <select id="model-select" class="w-40 bg-gray-800 border border-gray-700 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 pr-8">
+                        <select id="model-select" class="w-40 bg-gray-800 border border-gray-700 text-white text-sm rounded focus:ring-blue-500 block p-2.5 pr-8">
                             <option value="base">CatAI base</option>
                             <option value="fast">CatAI Fast</option>
-                            <option value="pro" disabled>CatAI PRO (Нет подписки)</option>
+                            <option value="pro" disabled>CatAI PRO</option>
                         </select>
-                        <svg class="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
                     </div>
-
-                    <input type="text" id="chat-input" placeholder="Введите ваше сообщение..." class="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white" autocomplete="off">
-                    
-                    <button type="submit" class="p-2 bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-                        <svg class="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                        </svg>
+                    <input type="text" id="chat-input" placeholder="Введите сообщение..." class="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded focus:ring-2 focus:ring-blue-500 text-white" autocomplete="off">
+                    <button type="submit" class="p-2 bg-blue-600 rounded hover:bg-blue-700 transition">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
                     </button>
                 </form>
             </div>
         </div>
     </section>
 
-    <div id="models-modal" class="page hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div id="modal-backdrop" class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                
-                <div id="modal-state-default">
-                    <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-600 sm:mx-0 sm:h-10 sm:w-10">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5 2a1 1 0 00-1 1v1h1a1 1 0 010 2H4v1a1 1 0 001 1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1V9a1 1 0 011-1h2a1 1 0 001-1V6h-1a1 1 0 110-2h1V3a1 1 0 00-1-1H5zM2 13v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1H3a1 1 0 00-1 1zm14 0v3a1 1 0 001 1h3a1 1 0 001-1v-3a1 1 0 00-1-1h-3a1 1 0 00-1 1z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                <h3 class="text-lg leading-6 font-medium text-white" id="modal-title">Модели CatAI</h3>
-                                <div class="mt-2"><p class="text-sm text-gray-400">Выберите модель, которая подходит под ваши задачи.</p></div>
-                            </div>
-                        </div>
-                        <div class="mt-6 space-y-6">
-                            <fieldset>
-                                <legend class="text-base font-medium text-white">Выберите модель</legend>
-                                <div class="mt-4 space-y-2">
-                                    <label class="flex items-center p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer">
-                                        <input name="model-selection" type="radio" value="base" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-500">
-                                        <span class="ml-3 text-sm font-medium text-white">CatAI base (Бесплатно)</span>
-                                    </label>
-                                    <label class="flex items-center p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer">
-                                        <input name="model-selection" type="radio" value="fast" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-500">
-                                        <span class="ml-3 text-sm font-medium text-white">CatAI Fast (Бесплатно)</span>
-                                    </label>
-                                    <label class="flex items-center p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer">
-                                        <input name="model-selection" type="radio" value="pro" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-500">
-                                        <span class="ml-3 text-sm font-medium text-white">CatAI PRO (Платная)</span>
-                                    </label>
-                                </div>
-                            </fieldset>
-                            <fieldset id="limit-selection-fieldset" class="hidden">
-                                <legend class="text-base font-medium text-white">Выберите лимит</legend>
-                                <div class="mt-4 grid grid-cols-3 gap-3">
-                                    <label class="flex items-center justify-center p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer text-sm font-medium text-white"><input name="limit-selection" type="radio" value="1k" class="sr-only"><span>1к</span></label>
-                                    <label class="flex items-center justify-center p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer text-sm font-medium text-white"><input name="limit-selection" type="radio" value="5k" class="sr-only"><span>5к</span></label>
-                                    <label class="flex items-center justify-center p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer text-sm font-medium text-white"><input name="limit-selection" type="radio" value="10k" class="sr-only"><span>10к</span></label>
-                                </div>
-                            </fieldset>
-                        </div>
-                    </div>
-                    <div class="bg-gray-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-700">
-                        <button id="purchase-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm" disabled>Оплатить (Скоро)</button>
-                        <button id="close-modal-btn" type="button" class="mt-3 sm:mt-0 w-full inline-flex justify-center rounded-md border border-gray-600 shadow-sm px-4 py-2 bg-gray-700 text-base font-medium text-white hover:bg-gray-600 focus:outline-none sm:w-auto sm:text-sm">Закрыть</button>
-                    </div>
-                </div>
-
-                <div id="modal-state-waiting" class="hidden bg-gray-800 px-4 pt-5 pb-8 sm:p-6 sm:pb-8 text-center">
-                    <h3 class="text-lg font-medium text-white">Ожидание...</h3>
-                    <svg class="animate-spin h-8 w-8 text-blue-500 mx-auto mt-6" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                </div>
-                <div id="modal-state-error" class="hidden bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="text-center"><h3 class="text-lg text-white">Ошибка</h3><p id="modal-error-message" class="text-gray-400 mt-2"></p></div>
-                    <div class="mt-4 text-center"><button id="close-error-btn" class="bg-gray-700 px-4 py-2 rounded text-white">Закрыть</button></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="admin-modal" class="page hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div id="admin-modal-backdrop" class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity"></div>
+    <div id="models-modal" class="page hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 sm:block sm:p-0 text-center">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75" id="modal-backdrop"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-            <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-                <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <h3 class="text-lg font-medium text-white mb-4">Админ-панель: Запросы</h3>
-                    <div id="admin-requests-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
+            <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:align-middle sm:max-w-lg sm:w-full">
+                <div id="modal-state-default" class="p-6">
+                    <h3 class="text-lg font-medium text-white">Модели CatAI</h3>
+                    <div class="mt-4 space-y-2">
+                        <label class="flex items-center p-3 rounded bg-gray-700 cursor-pointer"><input name="model-selection" type="radio" value="base" class="mr-3"> Base (Free)</label>
+                        <label class="flex items-center p-3 rounded bg-gray-700 cursor-pointer"><input name="model-selection" type="radio" value="fast" class="mr-3"> Fast (Free)</label>
+                        <label class="flex items-center p-3 rounded bg-gray-700 cursor-pointer"><input name="model-selection" type="radio" value="pro" class="mr-3"> PRO (Paid)</label>
+                    </div>
+                    <div id="limit-selection-fieldset" class="hidden mt-4 grid grid-cols-3 gap-3">
+                        <label class="bg-gray-700 p-2 rounded text-center cursor-pointer text-sm"><input name="limit-selection" type="radio" value="1k" class="sr-only">1k</label>
+                        <label class="bg-gray-700 p-2 rounded text-center cursor-pointer text-sm"><input name="limit-selection" type="radio" value="5k" class="sr-only">5k</label>
+                        <label class="bg-gray-700 p-2 rounded text-center cursor-pointer text-sm"><input name="limit-selection" type="radio" value="10k" class="sr-only">10k</label>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button id="close-modal-btn" class="bg-gray-700 px-4 py-2 rounded text-white">Закрыть</button>
+                        <button id="purchase-btn" class="bg-blue-600 px-4 py-2 rounded text-white" disabled>Оплатить</button>
+                    </div>
                 </div>
-                <div class="bg-gray-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-700">
-                    <button id="close-admin-modal-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-gray-600 shadow-sm px-4 py-2 bg-gray-700 text-base font-medium text-white hover:bg-gray-600 sm:w-auto sm:text-sm">Закрыть</button>
+                <div id="modal-state-waiting" class="hidden p-6 text-center"><h3 class="text-white">Ожидание...</h3></div>
+                <div id="modal-state-default" class="hidden"></div> 
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-modal" class="page hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 sm:block sm:p-0 text-center">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75" id="admin-modal-backdrop"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:align-middle sm:max-w-2xl sm:w-full">
+                <div class="p-6">
+                    <h3 class="text-lg font-medium text-white mb-4">Запросы</h3>
+                    <div id="admin-requests-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
+                    <div class="mt-4 flex justify-end"><button id="close-admin-modal-btn" class="bg-gray-700 px-4 py-2 rounded text-white">Закрыть</button></div>
                 </div>
             </div>
         </div>
     </div>
 
-<script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
         import { getDatabase, ref, onValue, push, set, serverTimestamp, update, off, get } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
@@ -267,6 +173,7 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // --- UI ---
         const pages = document.querySelectorAll('.page');
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
@@ -283,98 +190,87 @@
         let knowledgeBase = {};
         let subscriptionStatus = { status: 'none' };
         
-        const thinkingPhrases = ["Анализирую контекст...", "Ищу в базе знаний...", "Формулирую ответ...", "Проверяю детали..."];
+        const thinkingPhrases = ["Анализирую контекст...", "Проверяю базу знаний...", "Формирую структуру...", "Уточняю детали...", "Оптимизирую ответ..."];
 
-        // === 1. УМНЫЙ ПОИСК (ФИКС "МОРСА") ===
-        
-        // Список слов, которые мы ИГНОРИРУЕМ при поиске, чтобы искать по сути (существительному)
-        const STOP_WORDS = ['как', 'сделать', 'приготовить', 'сварить', 'пожарить', 'рецепт', 'испечь', 'запечь', 'что', 'такое', 'зачем', 'нужен', 'почему'];
+        // --- 1. УМНЫЙ ПОИСК (ВЕРСИЯ 3.0) ---
+        const STOP_WORDS = [
+            'как', 'сделать', 'приготовить', 'сварить', 'пожарить', 'зажарить', 
+            'испечь', 'запечь', 'сварганить', 'замутить', 'сообразить',
+            'рецепт', 'способ', 'метод',
+            'что', 'такое', 'зачем', 'нужен', 'почему', 'для', 'чего',
+            'быстро', 'вкусно', 'дома', 'самому'
+        ];
 
         function cleanString(str) {
-            let words = str.toLowerCase().trim().replace(/[\?\!\.\,]/g, '').split(' ');
-            // Убираем стоп-слова, если в запросе есть что-то еще кроме них
-            const filtered = words.filter(w => !STOP_WORDS.includes(w));
-            return filtered.length > 0 ? filtered.join(' ') : words.join(' ');
+            return str.toLowerCase().trim().replace(/[\?\!\.\,\(\)\-\:]/g, '');
         }
 
         function levenshtein(a, b) {
+            if (a.length === 0) return b.length;
+            if (b.length === 0) return a.length;
             const matrix = [];
             for (let i = 0; i <= b.length; i++) matrix[i] = [i];
             for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
             for (let i = 1; i <= b.length; i++) {
                 for (let j = 1; j <= a.length; j++) {
-                    if (b.charAt(i - 1) === a.charAt(j - 1)) { matrix[i][j] = matrix[i - 1][j - 1]; }
-                    else { matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1); }
+                    const cost = (b.charAt(i - 1) === a.charAt(j - 1)) ? 0 : 1;
+                    matrix[i][j] = Math.min(matrix[i - 1][j - 1] + cost, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
                 }
             }
             return matrix[b.length][a.length];
         }
 
         function findBestMatch(userInput, db) {
-            // Очищаем запрос от "мусора" (как, сделать...)
             const cleanInput = cleanString(userInput);
-            const inputWords = cleanInput.split(' ');
-            
+            const inputWords = cleanInput.split(' ').filter(w => w.length > 2);
             let bestMatch = null;
-            let bestScore = 0;
+            let bestScore = -100;
 
             for (const key in db) {
-                // Очищаем ключ из базы так же
                 const cleanKey = cleanString(key);
-                
+                const keyWords = cleanKey.split(' ').filter(w => !STOP_WORDS.includes(w));
                 let currentScore = 0;
-                
-                // 1. Бонус за полное совпадение ключевого слова (Борщ == Борщ)
-                let keyWords = cleanKey.split(' ');
-                let wordMatchBonus = 0;
+
                 inputWords.forEach(inWord => {
-                    if (inWord.length < 3) return;
                     keyWords.forEach(keyWord => {
-                        // Если корни совпадают (борщ - борща)
-                        if (keyWord.startsWith(inWord) || inWord.startsWith(keyWord)) {
-                            wordMatchBonus += 0.5; // Огромный бонус
+                        if (inWord.startsWith(keyWord.slice(0, -1)) || keyWord.startsWith(inWord.slice(0, -1))) {
+                            currentScore += 1.5; 
+                        } else if (levenshtein(inWord, keyWord) <= 1) {
+                             currentScore += 1.0;
                         }
                     });
                 });
 
-                // 2. Левенштейн для оставшейся сути
                 const distance = levenshtein(cleanInput, cleanKey);
                 const maxLength = Math.max(cleanInput.length, cleanKey.length);
                 const similarity = 1 - (distance / maxLength);
-
-                currentScore = similarity + wordMatchBonus;
+                currentScore += similarity;
 
                 if (currentScore > bestScore) {
                     bestScore = currentScore;
                     bestMatch = key;
                 }
             }
-            
-            console.log(`Input: "${userInput}" -> Clean: "${cleanInput}" | Match: "${bestMatch}" | Score: ${bestScore}`);
-            
-            // Порог 0.55 достаточно строгий, но бонус за совпадение слов вытянет правильный ответ
-            if (bestScore > 0.55) return db[bestMatch];
+            if (bestScore > 1.1) return db[bestMatch];
             return null;
         }
 
-        // === 2. ЗАГРУЗКА БАЗЫ ===
+        // --- 2. ЗАГРУЗКА (ANTI-CACHE) ---
         async function loadKnowledgeBase() {
             const files = ['chat.json', 'cooking.json', 'technics.json', 'programm.json'];
             knowledgeBase = {};
-            const timestamp = new Date().getTime();
+            const ts = new Date().getTime();
             for (const file of files) {
                 try {
-                    const response = await fetch(file + '?v=' + timestamp);
+                    const response = await fetch(file + '?v=' + ts);
                     if (!response.ok) continue;
                     const data = await response.json();
-                    for (let key in data) {
-                        knowledgeBase[key.toLowerCase().trim()] = data[key];
-                    }
+                    for (let key in data) knowledgeBase[key.toLowerCase().trim()] = data[key];
                 } catch (e) { console.error(e); }
             }
         }
 
-        // === 3. UI LOGIC ===
+        // --- 3. ROUTING ---
         function updateView() {
             const hash = window.location.hash || (currentUserId ? '#ai' : '#login');
             pages.forEach(p => p.classList.add('hidden'));
@@ -386,7 +282,7 @@
         }
         window.addEventListener('hashchange', updateView);
 
-        // === 4. AUTH ===
+        // --- 4. AUTH ---
         onAuthStateChanged(auth, async (user) => {
             currentUserId = user ? user.uid : null;
             if (user) {
@@ -407,32 +303,25 @@
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const errorText = document.getElementById('login-error');
-            try {
-                await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value);
-            } catch (e) { errorText.textContent = 'Ошибка: ' + e.message; }
+            try { await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value); } 
+            catch (e) { document.getElementById('login-error').textContent = e.code === 'auth/wrong-password' ? 'Неверный пароль' : e.message; }
         });
-
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if(document.getElementById('register-password').value !== document.getElementById('register-password-confirm').value) return alert('Пароли не совпадают');
-            try {
-                await createUserWithEmailAndPassword(auth, document.getElementById('register-email').value, document.getElementById('register-password').value);
-                window.location.hash = '#login';
-            } catch (e) { document.getElementById('register-error').textContent = e.message; }
+            try { await createUserWithEmailAndPassword(auth, document.getElementById('register-email').value, document.getElementById('register-password').value); window.location.hash = '#login'; } 
+            catch (e) { document.getElementById('register-error').textContent = e.message; }
         });
         document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-        // === 5. CHAT & ANIMATION (ФИКС ТЕГОВ) ===
+        // --- 5. CHAT ---
         function setupChatListeners(uid) {
             onValue(ref(db, `users/${uid}/chats`), (snap) => {
                 userChatsData = snap.val() || {};
                 renderSidebar(userChatsData);
                 if (currentActiveChatId && userChatsData[currentActiveChatId]) renderChat(userChatsData[currentActiveChatId]);
-                else if (!currentActiveChatId && Object.keys(userChatsData).length > 0) {
-                    currentActiveChatId = Object.keys(userChatsData)[0];
-                    renderChat(userChatsData[currentActiveChatId]);
-                } else if (!Object.keys(userChatsData).length) createNewChat();
+                else if (!currentActiveChatId && Object.keys(userChatsData).length > 0) { currentActiveChatId = Object.keys(userChatsData)[0]; renderChat(userChatsData[currentActiveChatId]); }
+                else if (!Object.keys(userChatsData).length) createNewChat();
             });
         }
 
@@ -479,31 +368,31 @@
             return div;
         }
 
-        // --- ФИКС АНИМАЦИИ (ПРОПУСК ТЕГОВ) ---
+        // --- АНИМАЦИЯ (С ПРОПУСКОМ ТЕГОВ) ---
         function typeWriter(element, text, speed) {
             return new Promise(resolve => {
                 let i = 0;
-                element.innerHTML = '';
+                element.innerHTML = '<span class="typing-cursor"></span>'; // Курсор
                 function type() {
                     if (i < text.length) {
                         const char = text.charAt(i);
-                        // Если встретили открывающий тег, ищем закрывающий и вставляем целиком
+                        // Убираем курсор, вставляем символ, возвращаем курсор
+                        let currentHTML = element.innerHTML.replace('<span class="typing-cursor"></span>', '');
+                        
                         if (char === '<') {
                             let tag = '';
-                            while (text.charAt(i) !== '>' && i < text.length) {
-                                tag += text.charAt(i);
-                                i++;
-                            }
-                            tag += '>'; // Закрываем скобку
-                            i++; 
-                            element.innerHTML += tag; // Вставляем тег мгновенно
+                            while (text.charAt(i) !== '>' && i < text.length) { tag += text.charAt(i); i++; }
+                            tag += '>'; i++;
+                            currentHTML += tag;
                         } else {
-                            element.innerHTML += char;
+                            currentHTML += char;
                             i++;
                         }
+                        element.innerHTML = currentHTML + '<span class="typing-cursor"></span>';
                         chatMessages.scrollTop = chatMessages.scrollHeight;
                         setTimeout(type, speed);
                     } else {
+                        element.innerHTML = element.innerHTML.replace('<span class="typing-cursor"></span>', ''); // Удаляем курсор
                         resolve();
                     }
                 }
@@ -511,7 +400,7 @@
             });
         }
 
-        // === 6. MAIN CHAT HANDLER ===
+        // --- 6. MAIN HANDLER ---
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const txt = chatInput.value.trim();
@@ -520,12 +409,10 @@
             const model = document.getElementById('model-select').value;
             chatInput.value = '';
 
-            // 1. User message to DB
             await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'user', content: txt });
             const msgs = userChatsData[cid]?.messages || {};
             if (Object.keys(msgs).length <= 1) update(ref(db, `users/${currentUserId}/chats/${cid}`), { title: txt.substring(0,25) });
 
-            // Settings
             let thinkingTime = (model === 'fast') ? 500 : ((model === 'pro') ? 4000 : 1500);
             let typingSpeed = (model === 'fast') ? 10 : ((model === 'pro') ? 50 : 30);
             
@@ -553,21 +440,20 @@
 
                 typingIndicator.classList.add('hidden');
 
-                // 2. Temp message for animation
+                // ФИКС МИГАНИЯ: Сначала анимация во временный блок
                 const tempDiv = appendMessageToUI('ai', '');
                 const contentDiv = tempDiv.querySelector('.message-content');
                 
-                // 3. Animate
                 await typeWriter(contentDiv, text, typingSpeed);
 
-                // 4. Save to DB (will trigger re-render, preventing blink)
+                // Потом сохраняем в БД (onValue обновит чат незаметно для глаза)
                 await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: text });
             }
         });
 
         document.getElementById('new-chat-btn').addEventListener('click', createNewChat);
 
-        // === 7. OTHER ===
+        // --- 7. SUBSCRIPTION ---
         function setupSubscriptionListener(uid) {
             onValue(ref(db, `users/${uid}/subscription`), s => {
                 subscriptionStatus = s.val() || { status: 'none' };
@@ -577,7 +463,6 @@
             });
         }
         
-        // Modals Logic
         const modal = document.getElementById('models-modal');
         const pBtn = document.getElementById('purchase-btn');
         document.getElementById('models-btn').addEventListener('click', () => window.location.hash = '#models');
