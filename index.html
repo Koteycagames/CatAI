@@ -26,7 +26,7 @@
 </head>
 <body class="bg-gray-900 text-white h-full overflow-hidden font-sans">
 
-    <div id="server-offline-screen" class="hidden fixed inset-0 z-[100] bg-gray-900 flexflex-col items-center justify-center p-4 text-center">
+    <div id="server-offline-screen" class="hidden fixed inset-0 z-[100] bg-gray-900 flex flex-col items-center justify-center p-4 text-center">
         <div class="max-w-md w-full bg-gray-800 p-8 rounded-xl shadow-2xl border border-red-600/30">
             <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-900/30 mb-6">
                 <svg class="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -196,7 +196,6 @@
                             Положить сервер (С причиной)
                         </h3>
                         <p class="text-sm text-gray-400 mb-4">Выберите причину, которую увидят пользователи.</p>
-                        
                         <div class="flex space-x-3">
                             <select id="crash-reason-select" class="flex-1 bg-gray-900 border border-gray-600 text-white text-sm rounded-lg p-2.5">
                                 <option value="Технические работы (Обновление)">Обновление сервера</option>
@@ -204,27 +203,20 @@
                                 <option value="Критические неполадки">Неполадки / Сбой</option>
                                 <option value="Сервер устал и лег спать">Своя причина (Шутка)</option>
                             </select>
-                            <button onclick="adminCrashServer()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition">
-                                Положить
-                            </button>
+                            <button onclick="adminCrashServer()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition">Положить</button>
                         </div>
                     </div>
 
                     <div class="bg-gray-700/30 border border-gray-600 p-6 rounded-xl">
                         <h3 class="text-lg font-bold text-orange-400 mb-2">Отключить доступ</h3>
                         <p class="text-sm text-gray-400 mb-4">Просто показывает "Ошибка подключения". Без объяснений.</p>
-                        <button onclick="adminDisconnectServer()" class="w-full py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition">
-                            Отключить (Ошибка подключения)
-                        </button>
+                        <button onclick="adminDisconnectServer()" class="w-full py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition">Отключить</button>
                     </div>
 
                     <div class="bg-green-900/20 border border-green-600/50 p-6 rounded-xl text-center">
                         <h3 class="text-lg font-bold text-green-400 mb-2">Восстановить работу</h3>
-                        <button onclick="adminReviveServer()" class="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold shadow-lg transition transform hover:scale-105">
-                            ВКЛЮЧИТЬ СЕРВЕР
-                        </button>
+                        <button onclick="adminReviveServer()" class="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold shadow-lg transition transform hover:scale-105">ВКЛЮЧИТЬ СЕРВЕР</button>
                     </div>
-
                 </div>
             </div>
 
@@ -269,57 +261,65 @@
         let subscriptionStatus = { status: 'none' };
         const thinkingPhrases = ["Анализирую контекст...", "Проверяю базу...", "Формирую ответ...", "Оптимизирую..."];
 
-        // === 0. GLOBAL SERVER STATUS CHECK ===
+        // === 0. SERVER STATUS ===
         function setupServerStatusListener() {
             onValue(ref(db, 'serverStatus'), (snapshot) => {
                 const status = snapshot.val();
-                // Если сервера нет в базе, считаем что он онлайн
                 if (!status) return; 
-
                 if (status.isOnline === false) {
-                    // Сервер лежит
-                    if (isAdmin) {
-                        // Админу показываем, но пускаем (можно добавить баннер)
-                        console.log("Сервер оффлайн, но вы Админ.");
-                        offlineScreen.classList.add('hidden');
-                    } else {
-                        // Обычных юзеров блокируем
+                    if (isAdmin) { offlineScreen.classList.add('hidden'); } 
+                    else {
                         offlineReasonText.textContent = status.reason || "Ошибка подключения.";
-                        offlineScreen.classList.remove('hidden');
-                        offlineScreen.classList.add('flex');
+                        offlineScreen.classList.remove('hidden'); offlineScreen.classList.add('flex');
                     }
-                } else {
-                    // Сервер жив
-                    offlineScreen.classList.add('hidden');
-                    offlineScreen.classList.remove('flex');
-                }
+                } else { offlineScreen.classList.add('hidden'); offlineScreen.classList.remove('flex'); }
             });
         }
 
-        // === 1. SEARCH ENGINE ===
-        const STOP_WORDS = new Set(['как', 'сделать', 'приготовить', 'сварить', 'пожарить', 'рецепт', 'что', 'такое', 'зачем', 'почему', 'какой', 'быстро', 'вкусно']);
+        // === 1. УМНЫЙ ПОИСК 6.0 (ВЕСА) ===
+        const ACTION_WORDS = new Set([
+            'как', 'сделать', 'приготовить', 'сварить', 'пожарить', 'зажарить', 
+            'испечь', 'запечь', 'сварганить', 'замутить', 'сообразить', 'намутить', 'создать',
+            'рецепт', 'способ', 'метод', 'инструкция', 'вариант',
+            'что', 'такое', 'зачем', 'нужен', 'почему', 'для', 'чего', 'какой', 'какая', 'какие',
+            'быстро', 'вкусно', 'дома', 'самому', 'правильно', 'лучше', 'можно', 'надо',
+            'скажи', 'расскажи', 'напиши', 'покажи', 'дай', 'найди'
+        ]);
+
         function cleanString(str) { return str.toLowerCase().trim().replace(/[\?\!\.\,\(\)\-\:]/g, ''); }
+
         function findBestMatch(userInput, db) {
-            const userWords = cleanString(userInput).split(/\s+/);
-            const importantUserWords = userWords.filter(w => !STOP_WORDS.has(w) && w.length > 2);
-            const wordsToSearch = importantUserWords.length > 0 ? importantUserWords : userWords;
-            let bestMatchKey = null, maxMatches = 0;
+            const userWords = cleanString(userInput).split(/\s+/).filter(w => w.length > 1);
+            let bestMatchKey = null, maxScore = 0;
+
             for (const dbKey in db) {
                 const dbWords = cleanString(dbKey).split(/\s+/);
-                let currentMatches = 0;
-                wordsToSearch.forEach(uWord => {
+                let currentScore = 0;
+
+                userWords.forEach(uWord => {
                     dbWords.forEach(dbWord => {
-                        if (uWord === dbWord) currentMatches += 10;
-                        else if (dbWord.startsWith(uWord) || uWord.startsWith(dbWord)) currentMatches += 8;
+                        let wordScore = 0;
+                        const isAction = ACTION_WORDS.has(uWord) || ACTION_WORDS.has(dbWord);
+                        const weight = isAction ? 2 : 10; 
+
+                        if (uWord === dbWord) wordScore = weight; 
+                        else if (dbWord.startsWith(uWord) || uWord.startsWith(dbWord)) wordScore = weight * 0.8; 
                         else if (Math.abs(uWord.length - dbWord.length) <= 1) {
-                            let errors = 0; for(let i=0; i < Math.min(uWord.length, dbWord.length); i++) if(uWord[i] !== dbWord[i]) errors++;
-                            if (errors <= 1) currentMatches += 5;
+                            let errors = 0; const len = Math.min(uWord.length, dbWord.length);
+                            for(let i=0; i < len; i++) if(uWord[i] !== dbWord[i]) errors++;
+                            if (errors <= 1 && len > 3) wordScore = weight * 0.6;
                         }
+                        currentScore += wordScore;
                     });
                 });
-                if (currentMatches > maxMatches) { maxMatches = currentMatches; bestMatchKey = dbKey; }
+
+                const lengthDiff = Math.abs(userWords.length - dbWords.length);
+                currentScore -= lengthDiff * 0.5;
+
+                if (currentScore > maxScore) { maxScore = currentScore; bestMatchKey = dbKey; }
             }
-            return maxMatches >= 5 ? db[bestMatchKey] : null;
+            if (maxScore >= 6) return db[bestMatchKey];
+            return null;
         }
 
         // === 2. LOAD DATA ===
@@ -358,7 +358,7 @@
                 await loadKnowledgeBase();
                 setupChatListeners(user.uid);
                 setupSubscriptionListener(user.uid);
-                setupServerStatusListener(); // Слушаем статус сервера
+                setupServerStatusListener();
                 if(isAdmin) setupAdminListeners();
                 if(!window.location.hash || window.location.hash === '#login') window.location.hash = '#ai';
             } else {
@@ -369,7 +369,6 @@
             updateView();
         });
 
-        // Forms
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             try { await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value); } 
@@ -383,7 +382,7 @@
         });
         document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-        // === 5. CHAT SYSTEM (FIXED) ===
+        // === 5. CHAT SYSTEM ===
         function setupChatListeners(uid) {
             onValue(ref(db, `users/${uid}/chats`), (snap) => {
                 userChatsData = snap.val() || {};
@@ -401,7 +400,6 @@
             currentActiveChatId = newId;
             await set(newRef, { title: 'Новый чат', createdAt: serverTimestamp(), messages: {} });
             push(ref(db, `users/${currentUserId}/chats/${newId}/messages`), {role: 'ai', content: 'Привет! Я CatAI.'});
-            // Optimistic update
             userChatsData[newId] = { title: 'Новый чат', messages: {} };
             renderSidebar(userChatsData);
             chatMessages.innerHTML = '';
@@ -499,7 +497,7 @@
                 if (model === 'pro' && subscriptionStatus.status !== 'active') text = 'Ошибка: Нужна PRO подписка.';
                 else {
                     const answer = findBestMatch(txt, knowledgeBase);
-                    text = answer ? answer : 'Я не понял вопрос.';
+                    text = answer ? answer : 'Я не понял вопрос. Попробуйте переформулировать.';
                     if(model !== 'base') text = prefix + text;
                 }
                 typingIndicator.classList.add('hidden');
@@ -512,7 +510,7 @@
 
         document.getElementById('new-chat-btn').addEventListener('click', createNewChat);
 
-        // === 6. SUBSCRIPTION & MODALS ===
+        // === 6. SUBSCRIPTION ===
         function setupSubscriptionListener(uid) {
             onValue(ref(db, `users/${uid}/subscription`), s => {
                 subscriptionStatus = s.val() || { status: 'none' };
@@ -522,7 +520,6 @@
             });
         }
         
-        // Modals logic
         const modelsModal = document.getElementById('models-modal');
         const adminModal = document.getElementById('admin-modal');
         document.getElementById('models-btn').addEventListener('click', () => window.location.hash = '#models');
@@ -549,38 +546,28 @@
             await set(reqRef, { userId: currentUserId, userEmail: auth.currentUser.email, model: m, limit: lim, status: 'pending', timestamp: serverTimestamp() });
             onValue(reqRef, s => {
                 const d = s.val(); if(!d) return;
-                if(d.status === 'confirmed') { alert('Подписка активна!'); window.location.hash='#ai'; modelsModal.classList.add('hidden'); window.location.reload(); } // Reload для обновления UI
+                if(d.status === 'confirmed') { alert('Подписка активна!'); window.location.hash='#ai'; modelsModal.classList.add('hidden'); window.location.reload(); }
             });
         });
 
-        // === 7. ADMIN PANEL LOGIC (TABS & SERVER CONTROL) ===
-        
-        // Табы
+        // === 7. ADMIN PANEL ===
         const tabReqBtn = document.getElementById('tab-requests-btn');
         const tabMgmtBtn = document.getElementById('tab-management-btn');
         const tabReqContent = document.getElementById('tab-requests-content');
         const tabMgmtContent = document.getElementById('tab-management-content');
 
         tabReqBtn.onclick = () => {
-            tabReqContent.classList.remove('hidden');
-            tabMgmtContent.classList.add('hidden');
-            tabReqBtn.classList.add('border-b-2', 'border-blue-500', 'text-white');
-            tabReqBtn.classList.remove('text-gray-400');
-            tabMgmtBtn.classList.remove('border-b-2', 'border-blue-500', 'text-white');
-            tabMgmtBtn.classList.add('text-gray-400');
+            tabReqContent.classList.remove('hidden'); tabMgmtContent.classList.add('hidden');
+            tabReqBtn.classList.add('border-b-2', 'border-blue-500', 'text-white'); tabReqBtn.classList.remove('text-gray-400');
+            tabMgmtBtn.classList.remove('border-b-2', 'border-blue-500', 'text-white'); tabMgmtBtn.classList.add('text-gray-400');
         };
-
         tabMgmtBtn.onclick = () => {
-            tabReqContent.classList.add('hidden');
-            tabMgmtContent.classList.remove('hidden');
-            tabMgmtBtn.classList.add('border-b-2', 'border-blue-500', 'text-white');
-            tabMgmtBtn.classList.remove('text-gray-400');
-            tabReqBtn.classList.remove('border-b-2', 'border-blue-500', 'text-white');
-            tabReqBtn.classList.add('text-gray-400');
+            tabReqContent.classList.add('hidden'); tabMgmtContent.classList.remove('hidden');
+            tabMgmtBtn.classList.add('border-b-2', 'border-blue-500', 'text-white'); tabMgmtBtn.classList.remove('text-gray-400');
+            tabReqBtn.classList.remove('border-b-2', 'border-blue-500', 'text-white'); tabReqBtn.classList.add('text-gray-400');
         };
 
         function setupAdminListeners() {
-            // Слушаем запросы
             onValue(ref(db, 'purchaseRequests'), s => {
                 const list = document.getElementById('admin-requests-list');
                 list.innerHTML = '';
@@ -589,36 +576,26 @@
                     if(r.status !== 'pending') return;
                     const div = document.createElement('div');
                     div.className = 'bg-gray-700 p-4 rounded-lg flex justify-between items-center border border-gray-600';
-                    div.innerHTML = `
-                        <div><p class="font-bold text-white">${r.userEmail}</p><p class="text-xs text-blue-400">PRO ${r.limit}</p></div>
-                        <div class="space-x-2">
-                            <button class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition" onclick="window.confirmReq('${rid}','${r.userId}','${r.model}',${r.limit})">✔</button>
-                            <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition" onclick="window.rejectReq('${rid}')">✖</button>
-                        </div>`;
+                    div.innerHTML = `<div><p class="font-bold text-white">${r.userEmail}</p><p class="text-xs text-blue-400">PRO ${r.limit}</p></div>
+                        <div class="space-x-2"><button class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition" onclick="window.confirmReq('${rid}','${r.userId}','${r.model}',${r.limit})">✔</button><button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition" onclick="window.rejectReq('${rid}')">✖</button></div>`;
                     list.appendChild(div);
                 });
             });
         }
 
-        // Функции управления сервером (Глобальные)
         window.adminCrashServer = async () => {
             const reason = document.getElementById('crash-reason-select').value;
-            if(confirm(`Вы точно хотите ПОЛОЖИТЬ сервер с причиной: "${reason}"?`)) {
+            if(confirm(`ПОЛОЖИТЬ сервер с причиной: "${reason}"?`)) {
                 await set(ref(db, 'serverStatus'), { isOnline: false, reason: reason });
-                alert('Сервер отключен (Crash Mode).');
             }
         };
-
         window.adminDisconnectServer = async () => {
-            if(confirm('Отключить доступ? Юзеры увидят ошибку соединения.')) {
+            if(confirm('Отключить доступ?')) {
                 await set(ref(db, 'serverStatus'), { isOnline: false, reason: 'Ошибка подключения к серверу. Повторите попытку позже.' });
-                alert('Сервер отключен (Disconnect Mode).');
             }
         };
-
         window.adminReviveServer = async () => {
             await set(ref(db, 'serverStatus'), { isOnline: true, reason: '' });
-            alert('Сервер снова ОНЛАЙН!');
         };
 
         window.confirmReq = async (rid, uid, model, limit) => { await set(ref(db, `users/${uid}/subscription`), { status: 'active', model, limit }); await update(ref(db, `purchaseRequests/${rid}`), { status: 'confirmed' }); };
