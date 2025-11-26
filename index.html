@@ -68,7 +68,7 @@
                     <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg> Модели
                 </a>
                  <a href="#admin" id="admin-panel-btn" class="hidden flex items-center px-3 py-2 text-sm font-medium rounded-lg text-yellow-500 hover:bg-gray-800 hover:text-yellow-400 transition">
-                      <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg> Админ
+                      <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg> Админ-панель
                  </a>
                  <a href="#login" id="logout-btn" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition">
                       <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Выйти
@@ -104,19 +104,17 @@
         <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" id="modal-backdrop"></div>
         <div class="relative bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all border border-gray-700">
             <div id="modal-state-default" class="p-6">
-                <h3 class="text-xl font-bold text-white mb-1">Модели CatAI</h3>
-                <div class="space-y-3 mt-4">
+                <h3 class="text-xl font-bold text-white mb-1">Выберите модель</h3>
+                <p class="text-gray-400 text-sm mb-6">Pro версия открывает доступ к сложным вычислениям.</p>
+                <div class="space-y-3">
                     <label class="flex items-center p-4 rounded-xl bg-gray-700/50 hover:bg-gray-700 cursor-pointer border border-transparent hover:border-gray-600 transition group">
-                        <input name="model-selection" type="radio" value="base" class="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 focus:ring-blue-600 focus:ring-2">
-                        <div class="ml-4"><span class="block text-sm font-medium text-white">CatAI Base</span><span class="block text-xs text-gray-400">Стандарт</span></div>
+                        <input name="model-selection" type="radio" value="base" class="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 focus:ring-blue-600 focus:ring-2"><div class="ml-4"><span class="block text-sm font-medium text-white">CatAI Base</span><span class="block text-xs text-gray-400">Стандарт</span></div>
                     </label>
                     <label class="flex items-center p-4 rounded-xl bg-gray-700/50 hover:bg-gray-700 cursor-pointer border border-transparent hover:border-gray-600 transition group">
-                        <input name="model-selection" type="radio" value="fast" class="w-5 h-5 text-yellow-500 bg-gray-600 border-gray-500 focus:ring-yellow-500 focus:ring-2">
-                        <div class="ml-4"><span class="block text-sm font-medium text-white">CatAI Fast ⚡</span><span class="block text-xs text-gray-400">Быстрый</span></div>
+                        <input name="model-selection" type="radio" value="fast" class="w-5 h-5 text-yellow-500 bg-gray-600 border-gray-500 focus:ring-yellow-500 focus:ring-2"><div class="ml-4"><span class="block text-sm font-medium text-white">CatAI Fast ⚡</span><span class="block text-xs text-gray-400">Быстрый</span></div>
                     </label>
                     <label class="flex items-center p-4 rounded-xl bg-gray-700/50 hover:bg-gray-700 cursor-pointer border border-transparent hover:border-gray-600 transition group">
-                        <input name="model-selection" type="radio" value="pro" class="w-5 h-5 text-purple-500 bg-gray-600 border-gray-500 focus:ring-purple-500 focus:ring-2">
-                        <div class="ml-4"><span class="block text-sm font-medium text-white">CatAI PRO 🚀</span><span class="block text-xs text-gray-400">Умный</span></div>
+                        <input name="model-selection" type="radio" value="pro" class="w-5 h-5 text-purple-500 bg-gray-600 border-gray-500 focus:ring-purple-500 focus:ring-2"><div class="ml-4"><span class="block text-sm font-medium text-white">CatAI PRO 🚀</span><span class="block text-xs text-gray-400">Умный</span></div>
                     </label>
                 </div>
                 <div id="limit-selection-fieldset" class="hidden mt-6 pt-6 border-t border-gray-700 animate-fade-in">
@@ -176,6 +174,7 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // UI VARS
         const pages = document.querySelectorAll('.page');
         const chatHistoryList = document.getElementById('chat-history-list');
         const chatMessages = document.getElementById('chat-messages');
@@ -189,28 +188,32 @@
         let currentActiveChatId = null;
         let knowledgeBase = {};
         let subscriptionStatus = { status: 'none' };
-        const thinkingPhrases = ["Анализирую...", "Ищу...", "Пишу..."];
+        const thinkingPhrases = ["Анализирую контекст...", "Проверяю базу...", "Формирую ответ...", "Оптимизирую..."];
 
         // === 0. SERVER STATUS ===
         function setupServerStatusListener() {
             onValue(ref(db, 'serverStatus'), (snapshot) => {
                 const status = snapshot.val();
                 if (!status) return; 
-                if (status.isOnline === false && !isAdmin) {
-                    offlineReasonText.textContent = status.reason || "Ошибка подключения.";
-                    offlineScreen.classList.remove('hidden'); offlineScreen.classList.add('flex');
+                if (status.isOnline === false) {
+                    if (isAdmin) { offlineScreen.classList.add('hidden'); } 
+                    else {
+                        offlineReasonText.textContent = status.reason || "Ошибка подключения.";
+                        offlineScreen.classList.remove('hidden'); offlineScreen.classList.add('flex');
+                    }
                 } else { offlineScreen.classList.add('hidden'); offlineScreen.classList.remove('flex'); }
             });
         }
 
-        // === 1. УМНЫЙ ПОИСК (FIX "ПРИВЕ") ===
+        // === 1. УМНЫЙ ПОИСК 8.0 (ВЫСОКИЕ СТАВКИ) ===
         const ACTION_WORDS = new Set([
             'как', 'сделать', 'приготовить', 'сварить', 'пожарить', 'зажарить', 
-            'испечь', 'запечь', 'сварганить', 'замутить', 'сообразить',
-            'рецепт', 'способ', 'метод', 'инструкция',
-            'что', 'такое', 'зачем', 'нужен', 'почему', 'для', 'чего', 'какой',
-            'быстро', 'вкусно', 'дома', 'самому',
-            'при', 'на', 'в', 'с', 'по', 'из', 'у', 'о', 'об', 'от', 'до', 'под', 'над' // ПРЕДЛОГИ В БАН
+            'испечь', 'запечь', 'сварганить', 'замутить', 'сообразить', 'намутить', 'создать',
+            'рецепт', 'способ', 'метод', 'инструкция', 'вариант',
+            'что', 'такое', 'зачем', 'нужен', 'почему', 'для', 'чего', 'какой', 'какая', 'какие',
+            'быстро', 'вкусно', 'дома', 'самому', 'правильно', 'лучше', 'можно', 'надо',
+            'скажи', 'расскажи', 'напиши', 'покажи', 'дай', 'найди',
+            'при', 'на', 'в', 'с', 'по', 'из', 'у', 'о', 'об', 'от', 'до', 'под', 'над'
         ]);
 
         function cleanString(str) { return str.toLowerCase().trim().replace(/[\?\!\.\,\(\)\-\:]/g, ''); }
@@ -242,20 +245,13 @@
                     dbWords.forEach(dbWord => {
                         let wordScore = 0;
                         const isAction = ACTION_WORDS.has(uWord) || ACTION_WORDS.has(dbWord);
-                        const weight = isAction ? 2 : 10; 
+                        const weight = isAction ? 2 : 20; // 20 баллов за СУЩЕСТВИТЕЛЬНОЕ
 
-                        // 1. Точное совпадение
-                        if (uWord === dbWord) {
-                            wordScore = weight; 
-                        }
-                        // 2. Корень (только если слово > 3 букв, иначе "при" совпадет с "привет")
-                        else if (uWord.length > 3 && dbWord.length > 3 && (dbWord.startsWith(uWord) || uWord.startsWith(dbWord))) {
-                            wordScore = weight * 0.8; 
-                        }
-                        // 3. Опечатки
+                        if (uWord === dbWord) wordScore = weight; // Точное
+                        // Корень и Опечатки - только для длинных слов
                         else if (uWord.length > 3 && dbWord.length > 3) {
-                            const dist = levenshtein(uWord, dbWord);
-                            if (dist <= 1) wordScore = weight * 0.6;
+                            if (dbWord.startsWith(uWord) || uWord.startsWith(dbWord)) wordScore = weight * 0.75; // Корень (15)
+                            else if (levenshtein(uWord, dbWord) <= 1) wordScore = weight * 0.5; // Опечатка (10)
                         }
                         
                         if(wordScore > 0) currentScore += wordScore;
@@ -267,7 +263,9 @@
 
                 if (currentScore > maxScore) { maxScore = currentScore; bestMatchKey = dbKey; }
             }
-            if (maxScore >= 6) return db[bestMatchKey];
+            
+            console.log(`Input: ${userInput} | Match: ${bestMatchKey} | Score: ${maxScore}`);
+            if (maxScore >= 12) return db[bestMatchKey]; // Порог 12
             return null;
         }
 
@@ -331,7 +329,7 @@
         });
         document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-        // === 5. CHAT ===
+        // === 5. CHAT SYSTEM ===
         function setupChatListeners(uid) {
             onValue(ref(db, `users/${uid}/chats`), (snap) => {
                 userChatsData = snap.val() || {};
@@ -446,7 +444,7 @@
                 if (model === 'pro' && subscriptionStatus.status !== 'active') text = 'Ошибка: Нужна PRO подписка.';
                 else {
                     const answer = findBestMatch(txt, knowledgeBase);
-                    text = answer ? answer : 'Я не понял вопрос.';
+                    text = answer ? answer : 'Я не понял вопрос. Попробуйте переформулировать.';
                     if(model !== 'base') text = prefix + text;
                 }
                 typingIndicator.classList.add('hidden');
@@ -499,7 +497,7 @@
             });
         });
 
-        // === 7. ADMIN ===
+        // === 7. ADMIN PANEL ===
         const tabReqBtn = document.getElementById('tab-requests-btn');
         const tabMgmtBtn = document.getElementById('tab-management-btn');
         const tabReqContent = document.getElementById('tab-requests-content');
