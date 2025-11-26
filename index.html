@@ -342,10 +342,11 @@
                                 wordScore = weight * 0.8; // 80% points for typo
                             }
                             // 3. Root match (startswith)
-                            else if (dbWord.startsWith(uWord) && uWord.length >= 3) {
-                                wordScore = weight * 0.6;
-                            }
-                        }
+                         // Совпадение корней (ТОЛЬКО ЕСЛИ СЛОВО ДЛИННОЕ > 3 букв)
+                        // Это спасет "привеь" от "при включении"
+                        else if ((dbWord.startsWith(uWord) || uWord.startsWith(dbWord)) && uWord.length > 3) {
+                       wordScore = weight * 0.8; 
+                     }
                         
                         // Only add score if it improves previous match for this word pair
                         if(wordScore > 0) currentScore += wordScore;
