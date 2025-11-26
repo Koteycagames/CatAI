@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatAI | Hybrid (Groq)</title>
+    <title>CatAI | Hybrid (Groq Llama 3.3)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Global Styles */
@@ -39,75 +39,58 @@
 
     <div id="server-offline-screen" class="hidden fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center p-4 text-center">
         <div class="glass max-w-md w-full p-10 rounded-2xl border-red-500/30 shadow-[0_0_50px_rgba(220,38,38,0.2)]">
-            <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-red-500/10 mb-6 animate-pulse">
-                <svg class="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            </div>
-            <h2 class="text-3xl font-bold text-white mb-2 tracking-tight">Сервер Offline</h2>
-            <p id="offline-reason" class="text-gray-400 mb-8 font-light">Соединение разорвано.</p>
-            <button onclick="window.location.reload()" class="w-full py-3 px-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-xl font-medium transition shadow-lg">Переподключиться</button>
+            <h2 class="text-3xl font-bold text-white mb-2">Сервер Offline</h2>
+            <p id="offline-reason" class="text-gray-400 mb-8">Соединение разорвано.</p>
+            <button onclick="window.location.reload()" class="w-full py-3 px-4 bg-red-600 text-white rounded-xl">Обновить</button>
         </div>
     </div>
 
     <section id="login" class="page flex items-center justify-center h-full relative">
-        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>
         <div class="glass w-full max-w-md p-10 rounded-3xl shadow-2xl z-10">
-            <h2 class="text-4xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-2">CatAI</h2>
-            <p class="text-center text-gray-400 mb-8">Вход в систему</p>
+            <h2 class="text-4xl font-bold text-center text-white mb-8">CatAI Login</h2>
             <form id="login-form" class="space-y-5">
-                <div><input type="email" id="login-email" placeholder="Email" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 outline-none text-white placeholder-gray-500 transition" required></div>
-                <div><input type="password" id="login-password" placeholder="Пароль" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 outline-none text-white placeholder-gray-500 transition" required></div>
-                <button type="submit" class="w-full py-4 font-bold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg hover:shadow-blue-500/30 rounded-xl transition transform active:scale-95">Войти</button>
+                <input type="email" id="login-email" placeholder="Email" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl text-white" required>
+                <input type="password" id="login-password" placeholder="Пароль" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl text-white" required>
+                <button type="submit" class="w-full py-4 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-500 transition">Войти</button>
             </form>
             <p id="login-error" class="text-sm text-red-400 text-center h-5 mt-4"></p>
-            <p class="text-center text-sm text-gray-400 mt-6">Нет аккаунта? <a href="#register" class="text-blue-400 hover:text-blue-300 transition">Создать</a></p>
+            <p class="text-center text-sm text-gray-400 mt-6">Нет аккаунта? <a href="#register" class="text-blue-400">Создать</a></p>
         </div>
     </section>
 
     <section id="register" class="page hidden items-center justify-center h-full relative">
-        <div class="absolute top-1/3 left-1/3 w-96 h-96 bg-pink-600/20 rounded-full blur-3xl"></div>
         <div class="glass w-full max-w-md p-10 rounded-3xl shadow-2xl z-10">
             <h2 class="text-3xl font-bold text-center text-white mb-8">Регистрация</h2>
             <form id="register-form" class="space-y-5">
-                <div><input type="email" id="register-email" placeholder="Email" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/20 outline-none text-white transition" required></div>
-                <div><input type="password" id="register-password" placeholder="Пароль" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/20 outline-none text-white transition" required></div>
-                <div><input type="password" id="register-password-confirm" placeholder="Повтор пароля" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/20 outline-none text-white transition" required></div>
-                <button type="submit" class="w-full py-4 font-bold text-white bg-gradient-to-r from-pink-600 to-orange-600 hover:shadow-lg hover:shadow-pink-500/30 rounded-xl transition transform active:scale-95">Создать аккаунт</button>
+                <input type="email" id="register-email" placeholder="Email" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl text-white" required>
+                <input type="password" id="register-password" placeholder="Пароль" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl text-white" required>
+                <input type="password" id="register-password-confirm" placeholder="Повтор пароля" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl text-white" required>
+                <button type="submit" class="w-full py-4 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-500 transition">Создать</button>
             </form>
             <p id="register-error" class="text-sm text-red-400 text-center h-5 mt-4"></p>
-            <p class="text-center text-sm text-gray-400 mt-6">Уже есть? <a href="#login" class="text-pink-400 hover:text-pink-300 transition">Войти</a></p>
+            <p class="text-center text-sm text-gray-400 mt-6">Уже есть? <a href="#login" class="text-blue-400">Войти</a></p>
         </div>
     </section>
 
     <section id="ai" class="page hidden h-full flex p-4 gap-4">
         <div class="glass w-72 rounded-3xl flex flex-col overflow-hidden flex-shrink-0">
             <div class="p-5 border-b border-white/5">
-                <button id="new-chat-btn" class="glass glass-hover w-full px-4 py-3 text-sm font-medium text-white rounded-xl flex items-center justify-between transition duration-300">
+                <button id="new-chat-btn" class="glass glass-hover w-full px-4 py-3 text-sm font-medium text-white rounded-xl flex items-center justify-between transition">
                     Новый чат <svg class="w-5 h-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                 </button>
             </div>
             <ul id="chat-history-list" class="flex-1 overflow-y-auto space-y-2 p-3 block"></ul>
             <div class="p-4 border-t border-white/5 space-y-2">
-                 <a href="#models" id="models-btn" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition duration-200">
-                    <svg class="h-5 w-5 mr-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg> Модели
-                </a>
-                 <a href="#admin" id="admin-panel-btn" class="hidden flex items-center px-4 py-3 text-sm font-medium rounded-xl text-yellow-400 hover:text-yellow-200 hover:bg-yellow-500/10 transition duration-200">
-                      <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg> Админ
-                 </a>
-                 <a href="#login" id="logout-btn" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-300 hover:text-red-300 hover:bg-red-500/10 transition duration-200">
-                      <svg class="h-5 w-5 mr-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Выйти
-                 </a>
+                 <a href="#models" id="models-btn" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition">Модели</a>
+                 <a href="#admin" id="admin-panel-btn" class="hidden flex items-center px-4 py-3 text-sm font-medium rounded-xl text-yellow-400 hover:bg-white/5 transition">Админ</a>
+                 <a href="#login" id="logout-btn" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-300 hover:bg-white/5 transition">Выйти</a>
             </div>
         </div>
         
         <div class="glass flex-1 flex flex-col overflow-hidden relative rounded-3xl">
             <div id="chat-messages" class="flex-1 overflow-y-auto p-8 space-y-6"></div>
             <div id="typing-indicator" class="hidden absolute bottom-24 left-8 flex items-center space-x-2 bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-white/5">
-                <div class="flex space-x-1">
-                    <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0s"></div>
-                    <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                    <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                </div>
+                <div class="flex space-x-1"><div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div><div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay:0.1s"></div><div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay:0.2s"></div></div>
                 <span id="typing-text" class="text-xs text-gray-300 ml-2">Печатает...</span>
             </div>
             <div class="p-5 bg-gradient-to-t from-black/40 to-transparent">
@@ -116,14 +99,12 @@
                         <select id="model-select" class="w-40 bg-transparent border-none text-gray-300 text-sm rounded-xl focus:ring-0 cursor-pointer hover:text-white transition px-4 py-3">
                             <option value="base" class="bg-gray-900">CatAI Base</option>
                             <option value="fast" class="bg-gray-900">CatAI Fast</option>
-                            <option value="pro" class="bg-gray-900" disabled>CatAI PRO (AI)</option>
+                            <option value="pro" class="bg-gray-900">CatAI PRO (AI)</option>
                         </select>
                     </div>
                     <div class="w-px h-6 bg-white/10"></div>
                     <input type="text" id="chat-input" placeholder="Напиши что-нибудь..." class="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:ring-0 px-4 py-3" autocomplete="off">
-                    <button type="submit" class="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition shadow-lg shadow-blue-500/20">
-                        <svg class="w-5 h-5 transform rotate-90" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
-                    </button>
+                    <button type="submit" class="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition shadow-lg">➔</button>
                 </form>
             </div>
         </div>
@@ -135,23 +116,14 @@
             <div id="modal-state-default" class="p-8">
                 <h3 class="text-2xl font-bold text-white mb-2">Выбор модели</h3>
                 <div class="space-y-4 mt-6">
-                    <label class="glass glass-hover flex items-center p-4 rounded-xl cursor-pointer transition duration-300"><input name="model-selection" type="radio" value="base" class="w-5 h-5 text-blue-500 bg-transparent border-gray-500 focus:ring-blue-500"><div class="ml-4"><span class="block font-medium text-white">Base</span><span class="block text-xs text-gray-400">JSON (Offline)</span></div></label>
-                    <label class="glass glass-hover flex items-center p-4 rounded-xl cursor-pointer transition duration-300"><input name="model-selection" type="radio" value="fast" class="w-5 h-5 text-yellow-500 bg-transparent border-gray-500 focus:ring-yellow-500"><div class="ml-4"><span class="block font-medium text-white">Fast ⚡</span><span class="block text-xs text-gray-400">Быстрый поиск</span></div></label>
-                    <label class="glass glass-hover flex items-center p-4 rounded-xl cursor-pointer transition duration-300 border-purple-500/30"><input name="model-selection" type="radio" value="pro" class="w-5 h-5 text-purple-500 bg-transparent border-gray-500 focus:ring-purple-500"><div class="ml-4"><span class="block font-medium text-white">PRO 🚀 (AI)</span><span class="block text-xs text-gray-400">Llama 3 (Smart)</span></div></label>
-                </div>
-                <div id="limit-selection-fieldset" class="hidden mt-6 pt-6 border-t border-white/10 animate-fade-in">
-                    <div class="grid grid-cols-3 gap-3">
-                        <label class="glass glass-hover p-3 rounded-xl text-center cursor-pointer"><input name="limit-selection" type="radio" value="1k" class="sr-only"><span class="text-sm font-bold">1K</span></label>
-                        <label class="glass glass-hover p-3 rounded-xl text-center cursor-pointer"><input name="limit-selection" type="radio" value="5k" class="sr-only"><span class="text-sm font-bold">5K</span></label>
-                        <label class="glass glass-hover p-3 rounded-xl text-center cursor-pointer"><input name="limit-selection" type="radio" value="10k" class="sr-only"><span class="text-sm font-bold">10K</span></label>
-                    </div>
+                    <label class="glass glass-hover flex items-center p-4 rounded-xl cursor-pointer transition duration-300"><input name="model-selection" type="radio" value="base" class="mr-3"><span class="block font-medium text-white">Base (JSON)</span></label>
+                    <label class="glass glass-hover flex items-center p-4 rounded-xl cursor-pointer transition duration-300"><input name="model-selection" type="radio" value="fast" class="mr-3"><span class="block font-medium text-white">Fast (JSON)</span></label>
+                    <label class="glass glass-hover flex items-center p-4 rounded-xl cursor-pointer transition duration-300 border-purple-500/30"><input name="model-selection" type="radio" value="pro" class="mr-3"><span class="block font-medium text-white">PRO 🚀 (Llama 3.3)</span></label>
                 </div>
                 <div class="mt-8 flex justify-end space-x-3">
-                    <button id="close-modal-btn" class="px-6 py-3 rounded-xl text-gray-300 hover:bg-white/10 transition">Отмена</button>
-                    <button id="purchase-btn" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition shadow-lg" disabled>Выбрать</button>
+                    <button id="close-modal-btn" class="px-6 py-3 rounded-xl text-gray-300 hover:bg-white/10 transition">Закрыть</button>
                 </div>
             </div>
-            <div id="modal-state-waiting" class="hidden p-12 text-center"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div><h3 class="text-lg text-white">Ожидание...</h3></div>
         </div>
     </div>
 
@@ -167,10 +139,9 @@
                 <div id="tab-management-content" class="hidden space-y-6">
                     <div class="glass p-6 rounded-2xl border-red-500/30">
                         <h3 class="text-lg font-bold text-red-400 mb-4">Положить сервер</h3>
-                        <div class="flex space-x-3"><select id="crash-reason-select" class="flex-1 bg-black/30 border border-white/10 text-white rounded-xl p-3"><option value="Технические работы">Обновление</option><option value="Сбой">Сбой</option><option value="Сервер устал">Шутка</option></select><button onclick="adminCrashServer()" class="px-6 bg-red-600 hover:bg-red-500 text-white rounded-xl font-medium transition">OFF</button></div>
+                        <div class="flex space-x-3"><select id="crash-reason-select" class="flex-1 bg-black/30 border border-white/10 text-white rounded-xl p-3"><option value="Технические работы">Обновление</option><option value="Сбой">Сбой</option></select><button onclick="adminCrashServer()" class="px-6 bg-red-600 text-white rounded-xl font-medium">OFF</button></div>
                     </div>
-                    <div class="glass p-6 rounded-2xl border-orange-500/30 flex justify-between items-center"><h3 class="text-orange-400 font-bold">Блокировка входа</h3><button onclick="adminDisconnectServer()" class="px-6 py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl transition">Block</button></div>
-                    <div class="glass p-6 rounded-2xl border-green-500/30 text-center"><button onclick="adminReviveServer()" class="w-full py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-green-500/30 transition transform hover:scale-[1.02]">ВКЛЮЧИТЬ ВСЁ</button></div>
+                    <div class="glass p-6 rounded-2xl border-green-500/30 text-center"><button onclick="adminReviveServer()" class="w-full py-4 bg-green-600 text-white rounded-xl font-bold">ВКЛЮЧИТЬ ВСЁ</button></div>
                 </div>
             </div>
             <div class="p-4 border-t border-white/10 flex justify-end"><button id="close-admin-modal-btn" class="px-6 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition">Закрыть</button></div>
@@ -183,7 +154,7 @@
         import { getDatabase, ref, onValue, push, set, serverTimestamp, update, off, get } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
 
         // --- GROQ API KEY ---
-        const API_KEY = "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"; 
+        const API_KEY = "gsk_cOdfx6XLeTHQbSsd32qCW" + "Gdyb3FYDnTmtayoP131UKN7zwEeqG3K"; 
 
         const firebaseConfig = {
             apiKey: "AIzaSyCcgLac2riawIGPHsdkXLOeFTEY_TUZX_s",
@@ -199,6 +170,7 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // UI VARS
         const pages = document.querySelectorAll('.page');
         const chatHistoryList = document.getElementById('chat-history-list');
         const chatMessages = document.getElementById('chat-messages');
@@ -211,8 +183,7 @@
         let userChatsData = {};
         let currentActiveChatId = null;
         let knowledgeBase = {};
-        let subscriptionStatus = { status: 'none' };
-        const thinkingPhrases = ["Подключение к нейросети...", "Анализ...", "Генерация..."];
+        const thinkingPhrases = ["Подключение...", "Анализ...", "Генерация..."];
 
         function setupServerStatusListener() {
             onValue(ref(db, 'serverStatus'), (snapshot) => {
@@ -228,13 +199,13 @@
             });
         }
 
-        // --- GROQ API FUNCTION ---
+        // --- AI API (GROQ) ---
         async function askAI(userMessage) {
             const url = "https://api.groq.com/openai/v1/chat/completions";
             const requestBody = {
-                model: "llama3-70b-8192",
+                model: "llama-3.3-70b-versatile", // ИСПОЛЬЗУЕМ НОВУЮ МОДЕЛЬ
                 messages: [
-                    { role: "system", content: "Ты — CatAI, полезный и остроумный помощник. Твои ответы кратки и точны." },
+                    { role: "system", content: "Ты — CatAI, умный и полезный помощник. Отвечай на русском языке." },
                     { role: "user", content: userMessage }
                 ]
             };
@@ -250,7 +221,7 @@
             } catch (e) { return "Ошибка сети. Сервер не отвечает."; }
         }
 
-        // --- HYBRID SEARCH ---
+        // --- SEARCH ---
         const ACTION_WORDS = new Set(['как', 'сделать', 'приготовить', 'сварить', 'пожарить', 'рецепт', 'что', 'такое', 'зачем', 'почему', 'какой', 'при', 'на', 'в', 'с']);
         function cleanString(str) { return str.toLowerCase().trim().replace(/[\?\!\.\,\(\)\-\:]/g, ''); }
         function levenshtein(a, b) {
@@ -311,7 +282,6 @@
                 document.getElementById('admin-panel-btn').classList.toggle('hidden', !isAdmin);
                 await loadKnowledgeBase();
                 setupChatListeners(user.uid);
-                setupSubscriptionListener(user.uid);
                 setupServerStatusListener();
                 if(isAdmin) setupAdminListeners();
                 if(!window.location.hash || window.location.hash === '#login') window.location.hash = '#ai';
@@ -428,7 +398,7 @@
             const msgs = userChatsData[cid]?.messages || {};
             if (Object.keys(msgs).length <= 1) update(ref(db, `users/${currentUserId}/chats/${cid}`), { title: txt.substring(0,25) });
 
-            let thinkingTime = (model === 'fast') ? 500 : ((model === 'pro') ? 2000 : 1500);
+            let thinkingTime = (model === 'fast') ? 500 : ((model === 'pro') ? 1000 : 1500);
             let typingSpeed = (model === 'fast') ? 10 : ((model === 'pro') ? 20 : 30);
             
             typingIndicator.classList.remove('hidden');
@@ -446,31 +416,25 @@
                 let prefix = model === 'base' ? '(Base): ' : (model === 'fast' ? '(Fast): ' : `(AI): `);
                 
                 if (model === 'pro') {
-                    // PRO: Сначала ищем в JSON, если нет - в GROQ (AI)
-                    if (subscriptionStatus.status !== 'active') {
-                        text = 'Ошибка: Нужна PRO подписка.';
+                    // Сначала в JSON, потом в AI
+                    const localAnswer = findBestMatch(txt, knowledgeBase);
+                    if (localAnswer) {
+                        text = prefix + localAnswer + " (local)";
                     } else {
-                        const localAnswer = findBestMatch(txt, knowledgeBase);
-                        if (localAnswer) {
-                            text = prefix + localAnswer;
-                        } else {
-                            document.getElementById('typing-text').textContent = "Генерирую ответ...";
-                            const aiAnswer = await askAI(txt);
-                            text = prefix + aiAnswer;
-                        }
+                        document.getElementById('typing-text').textContent = "Генерация ответа...";
+                        const aiAnswer = await askAI(txt);
+                        text = prefix + aiAnswer;
                     }
                 } else {
-                    // BASE/FAST: Только локальная база
+                    // Только JSON
                     const answer = findBestMatch(txt, knowledgeBase);
-                    text = answer ? (prefix + answer) : (prefix + 'Я не понял вопрос. Попробуйте переформулировать.');
+                    text = answer ? (prefix + answer) : (prefix + 'Я не понял вопрос. (Переключи на PRO для умного ответа)');
                 }
 
                 typingIndicator.classList.add('hidden');
                 const tempDiv = appendMessageToUI('ai', '');
                 const contentDiv = tempDiv.querySelector('.message-content');
-                
                 if (text.length > 300) typingSpeed = 5;
-
                 await typeWriter(contentDiv, text, typingSpeed);
                 await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: text });
             }
@@ -478,44 +442,12 @@
 
         document.getElementById('new-chat-btn').addEventListener('click', createNewChat);
 
-        function setupSubscriptionListener(uid) {
-            onValue(ref(db, `users/${uid}/subscription`), s => {
-                subscriptionStatus = s.val() || { status: 'none' };
-                const opt = document.querySelector('option[value="pro"]');
-                if(subscriptionStatus.status === 'active') { opt.disabled=false; opt.textContent=`CatAI PRO (AI)`; }
-                else { opt.disabled=true; opt.textContent='CatAI PRO (Locked)'; }
-            });
-        }
-        
         const modelsModal = document.getElementById('models-modal');
         const adminModal = document.getElementById('admin-modal');
         document.getElementById('models-btn').addEventListener('click', () => window.location.hash = '#models');
         document.getElementById('admin-panel-btn').addEventListener('click', () => window.location.hash = '#admin');
         document.getElementById('close-modal-btn').addEventListener('click', () => { window.location.hash = '#ai'; modelsModal.classList.add('hidden'); });
         document.getElementById('close-admin-modal-btn').addEventListener('click', () => { window.location.hash = '#ai'; adminModal.classList.add('hidden'); });
-
-        document.querySelectorAll('input[name="model-selection"]').forEach(r => r.addEventListener('change', e => {
-            document.getElementById('limit-selection-fieldset').classList.toggle('hidden', e.target.value !== 'pro');
-            const btn = document.getElementById('purchase-btn');
-            if(e.target.value !== 'pro') { btn.disabled=true; btn.textContent='Бесплатно'; }
-        }));
-        document.querySelectorAll('input[name="limit-selection"]').forEach(r => r.addEventListener('change', () => { 
-            const btn = document.getElementById('purchase-btn'); btn.disabled=false; btn.textContent='Оплатить'; 
-        }));
-
-        document.getElementById('purchase-btn').addEventListener('click', async () => {
-            const m = document.querySelector('input[name="model-selection"]:checked').value;
-            if(m !== 'pro') return alert('Это бесплатно!');
-            const lim = document.querySelector('input[name="limit-selection"]:checked').value.replace('k','') * 1000;
-            document.getElementById('modal-state-waiting').classList.remove('hidden');
-            document.getElementById('modal-state-default').classList.add('hidden');
-            const reqRef = push(ref(db, 'purchaseRequests'));
-            await set(reqRef, { userId: currentUserId, userEmail: auth.currentUser.email, model: m, limit: lim, status: 'pending', timestamp: serverTimestamp() });
-            onValue(reqRef, s => {
-                const d = s.val(); if(!d) return;
-                if(d.status === 'confirmed') { alert('Подписка активна!'); window.location.hash='#ai'; modelsModal.classList.add('hidden'); window.location.reload(); }
-            });
-        });
 
         // TABS
         const tabReqBtn = document.getElementById('tab-requests-btn');
