@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatAI | Liquid Glass (Safe AI)</title>
+    <title>CatAI | Liquid Glass</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Global Styles */
@@ -123,9 +123,9 @@
             <div id="modal-state-default" class="p-8">
                 <h3 class="text-2xl font-bold text-white mb-2">Выбор модели</h3>
                 <div class="space-y-4 mt-6">
-                    <label class="glass glass-hover flex items-center p-4 rounded-xl cursor-pointer transition duration-300"><input name="model-selection" type="radio" value="base" class="mr-3"><span class="block font-medium text-white">Base (JSON)</span></label>
-                    <label class="glass glass-hover flex items-center p-4 rounded-xl cursor-pointer transition duration-300"><input name="model-selection" type="radio" value="fast" class="mr-3"><span class="block font-medium text-white">Fast (JSON)</span></label>
-                    <label class="glass glass-hover flex items-center p-4 rounded-xl cursor-pointer transition duration-300 border-purple-500/30"><input name="model-selection" type="radio" value="pro" class="mr-3"><span class="block font-medium text-white">PRO 🚀 (Llama 3.3)</span></label>
+                    <label class="glass glass-hover flex items-center p-4 rounded-xl cursor-pointer transition duration-300"><input name="model-selection" type="radio" value="base" class="mr-3"><span class="block font-medium text-white">Base (Тупая версия)</span><span class="block text-xs text-gray-400">Не пишет код</span></label>
+                    <label class="glass glass-hover flex items-center p-4 rounded-xl cursor-pointer transition duration-300"><input name="model-selection" type="radio" value="fast" class="mr-3"><span class="block font-medium text-white">Fast (Тупая версия)</span><span class="block text-xs text-gray-400">Быстрая, но глупая</span></label>
+                    <label class="glass glass-hover flex items-center p-4 rounded-xl cursor-pointer transition duration-300 border-purple-500/30"><input name="model-selection" type="radio" value="pro" class="mr-3"><span class="block font-medium text-white">PRO 🚀 (Гений)</span><span class="block text-xs text-gray-400">Кодит, думает, решает</span></label>
                 </div>
                 <div id="limit-selection-fieldset" class="hidden mt-6 pt-6 border-t border-white/10 animate-fade-in">
                     <div class="grid grid-cols-3 gap-3">
@@ -139,6 +139,7 @@
                     <button id="purchase-btn" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition shadow-lg" disabled>Выбрать</button>
                 </div>
             </div>
+            <div id="modal-state-waiting" class="hidden p-12 text-center"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div><h3 class="text-lg text-white">Ожидание...</h3></div>
         </div>
     </div>
 
@@ -218,13 +219,27 @@
             });
         }
 
-        // --- AI API (WITH CENSORSHIP) ---
-        async function askAI(userMessage) {
+        // --- AI API (WITH DUMB MODE) ---
+        async function askAI(userMessage, mode) {
             const url = "https://api.groq.com/openai/v1/chat/completions";
+            
+            let systemContent = "Ты — CatAI, умный помощник. Отвечай на русском.";
+            
+            // ДЕЛАЕМ ЛАМУ ТУПОЙ ДЛЯ БЕСПЛАТНЫХ ВЕРСИЙ
+            if (mode === 'dumb') {
+                systemContent = "Ты — простая, ограниченная версия бота CatAI Base. Твои правила:\n1. Отвечай МАКСИМАЛЬНО КРАТКО (1-2 предложения).\n2. СТРОГО ЗАПРЕЩЕНО писать программный код.\n3. Если просят код или сложную задачу, отвечай: 'Я всего лишь базовая версия. Для этого нужна подписка PRO'.\n4. ВЕДИ СЕБЯ ГЛУПОВАТО И ПРОСТО.";
+            } else {
+                // PRO РЕЖИМ
+                systemContent = "Ты — CatAI PRO, гениальный эксперт. Отвечай подробно, пиши код, решай любые задачи. Ты самый умный ИИ.";
+            }
+
+            // ЦЕНЗУРА (ОБЩАЯ ДЛЯ ВСЕХ)
+            systemContent += "\nВАЖНО: Если сообщение содержит мат/оскорбления, отвечай ТОЛЬКО: 'Я не могу ответить на ваше сообщение из-за содержания некорректных выражений'.";
+
             const requestBody = {
                 model: "llama-3.3-70b-versatile",
                 messages: [
-                    { role: "system", content: "Ты — CatAI, умный помощник. Твои правила:\n1. Отвечай на русском.\n2. ВАЖНО: Если сообщение содержит нецензурную лексику, мат или оскорбления, ты ОБЯЗАН ответить СТРОГО этой фразой: 'Я не могу ответить на ваше сообщение из-за содержания некорректных выражений'." },
+                    { role: "system", content: systemContent },
                     { role: "user", content: userMessage }
                 ]
             };
@@ -440,12 +455,18 @@
                         text = 'Ошибка: Нужна PRO подписка.';
                     } else {
                         document.getElementById('typing-text').textContent = "Генерация ответа...";
-                        const aiAnswer = await askAI(txt);
+                        const aiAnswer = await askAI(txt, 'smart');
                         text = prefix + aiAnswer;
                     }
                 } else {
+                    // ДЛЯ BASE/FAST: Сначала JSON, если нет - ТУПОЙ AI
                     const answer = findBestMatch(txt, knowledgeBase);
-                    text = answer ? (prefix + answer) : (prefix + 'Я не понял вопрос. (Переключи на PRO)');
+                    if (answer) {
+                        text = prefix + answer;
+                    } else {
+                        const aiAnswer = await askAI(txt, 'dumb'); // ЗОВЕМ ТУПУЮ ЛАМУ
+                        text = prefix + aiAnswer;
+                    }
                 }
 
                 typingIndicator.classList.add('hidden');
@@ -475,7 +496,6 @@
         document.getElementById('close-modal-btn').addEventListener('click', () => { window.location.hash = '#ai'; modelsModal.classList.add('hidden'); });
         document.getElementById('close-admin-modal-btn').addEventListener('click', () => { window.location.hash = '#ai'; adminModal.classList.add('hidden'); });
 
-        // SAFE SELECTORS
         document.querySelectorAll('input[name="model-selection"]').forEach(r => r.addEventListener('change', e => {
             const fs = document.getElementById('limit-selection-fieldset');
             if(fs) fs.classList.toggle('hidden', e.target.value !== 'pro');
@@ -505,7 +525,6 @@
             });
         }
 
-        // TABS
         const tabReqBtn = document.getElementById('tab-requests-btn');
         const tabMgmtBtn = document.getElementById('tab-management-btn');
         const tabReqContent = document.getElementById('tab-requests-content');
