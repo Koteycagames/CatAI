@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatAI | Pure AI Pro</title>
+    <title>CatAI | Hybrid (Memory Fixed)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Global Styles */
@@ -226,11 +226,37 @@
         }
 
         async function askAI(userMessage) {
+            // Берем историю из текущего чата
+            const currentChat = userChatsData[currentActiveChatId];
+            const history = currentChat ? Object.values(currentChat.messages || {}) : [];
+
+            // Формируем системный промпт
+            const apiMessages = [
+                { role: "system", content: "Ты — CatAI, умный помощник. Отвечай кратко и по делу на русском." }
+            ];
+
+            // Добавляем последние 10 сообщений из истории
+            const recentHistory = history.slice(-10);
+            
+            recentHistory.forEach(msg => {
+                // Пропускаем текущее сообщение, если оно уже есть в базе (чтобы не двоилось)
+                if (msg.content === userMessage && msg.role === 'user') return;
+                
+                apiMessages.push({
+                    role: msg.role === 'ai' ? 'assistant' : 'user',
+                    content: msg.content
+                });
+            });
+
+            // Добавляем текущий вопрос
+            apiMessages.push({ role: "user", content: userMessage });
+
             const url = "https://api.groq.com/openai/v1/chat/completions";
             const requestBody = {
                 model: "llama-3.3-70b-versatile",
-                messages: [{ role: "system", content: "Ты — CatAI, умный помощник. Отвечай кратко и по делу на русском." }, { role: "user", content: userMessage }]
+                messages: apiMessages
             };
+
             try {
                 const response = await fetch(url, {
                     method: "POST",
@@ -438,16 +464,14 @@
                 let prefix = model === 'base' ? '(Base): ' : (model === 'fast' ? '(Fast): ' : `(AI): `);
                 
                 if (model === 'pro') {
-                    // PURE AI FOR PRO: NO LOCAL SEARCH
                     if (subscriptionStatus.status !== 'active') {
                         text = 'Ошибка: Нужна PRO подписка.';
                     } else {
                         document.getElementById('typing-text').textContent = "Генерация ответа...";
-                        const aiAnswer = await askAI(txt);
+                        const aiAnswer = await askAI(txt); // ВСЕГДА ИДЕМ В АИ
                         text = prefix + aiAnswer;
                     }
                 } else {
-                    // LOCAL SEARCH FOR BASE/FAST
                     const answer = findBestMatch(txt, knowledgeBase);
                     text = answer ? (prefix + answer) : (prefix + 'Я не понял вопрос. (Переключи на PRO)');
                 }
@@ -479,7 +503,6 @@
         document.getElementById('close-modal-btn').addEventListener('click', () => { window.location.hash = '#ai'; modelsModal.classList.add('hidden'); });
         document.getElementById('close-admin-modal-btn').addEventListener('click', () => { window.location.hash = '#ai'; adminModal.classList.add('hidden'); });
 
-        // SAFE SELECTORS (Защита от null)
         document.querySelectorAll('input[name="model-selection"]').forEach(r => r.addEventListener('change', e => {
             const fs = document.getElementById('limit-selection-fieldset');
             if(fs) fs.classList.toggle('hidden', e.target.value !== 'pro');
