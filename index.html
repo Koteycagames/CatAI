@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatAI | Hybrid (Memory Fixed)</title>
+    <title>CatAI | Liquid Glass (Safe AI)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Global Styles */
@@ -25,14 +25,8 @@
             transform: translateY(-1px);
         }
         ul, li { list-style: none !important; margin: 0; padding: 0; }
-        
-        /* Custom Select */
-        select {
-            -webkit-appearance: none; -moz-appearance: none; appearance: none;
-            background-color: #1f2937; color: white;
-        }
+        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background-color: #1f2937; color: white; }
         select option { background-color: #1f2937; color: white; padding: 10px; }
-
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
@@ -48,20 +42,20 @@
         <div class="glass max-w-md w-full p-10 rounded-2xl border-red-500/30 shadow-[0_0_50px_rgba(220,38,38,0.2)]">
             <h2 class="text-3xl font-bold text-white mb-2">Сервер Offline</h2>
             <p id="offline-reason" class="text-gray-400 mb-8">Соединение разорвано.</p>
-            <button onclick="window.location.reload()" class="w-full py-3 px-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-xl font-medium transition shadow-lg">Переподключиться</button>
+            <button onclick="window.location.reload()" class="w-full py-3 px-4 bg-red-600 text-white rounded-xl">Обновить</button>
         </div>
     </div>
 
     <section id="login" class="page flex items-center justify-center h-full relative">
         <div class="glass w-full max-w-md p-10 rounded-3xl shadow-2xl z-10">
-            <h2 class="text-4xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-2">CatAI</h2>
+            <h2 class="text-4xl font-bold text-center text-white mb-8">CatAI Login</h2>
             <form id="login-form" class="space-y-5">
                 <input type="email" id="login-email" placeholder="Email" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl text-white" required>
                 <input type="password" id="login-password" placeholder="Пароль" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl text-white" required>
-                <button type="submit" class="w-full py-4 font-bold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg hover:shadow-blue-500/30 rounded-xl transition transform active:scale-95">Войти</button>
+                <button type="submit" class="w-full py-4 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-500 transition">Войти</button>
             </form>
             <p id="login-error" class="text-sm text-red-400 text-center h-5 mt-4"></p>
-            <p class="text-center text-sm text-gray-400 mt-6">Нет аккаунта? <a href="#register" class="text-blue-400 hover:text-blue-300 transition">Создать</a></p>
+            <p class="text-center text-sm text-gray-400 mt-6">Нет аккаунта? <a href="#register" class="text-blue-400">Создать</a></p>
         </div>
     </section>
 
@@ -145,7 +139,6 @@
                     <button id="purchase-btn" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition shadow-lg" disabled>Выбрать</button>
                 </div>
             </div>
-            <div id="modal-state-waiting" class="hidden p-12 text-center"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div><h3 class="text-lg text-white">Ожидание...</h3></div>
         </div>
     </div>
 
@@ -225,38 +218,16 @@
             });
         }
 
+        // --- AI API (WITH CENSORSHIP) ---
         async function askAI(userMessage) {
-            // Берем историю из текущего чата
-            const currentChat = userChatsData[currentActiveChatId];
-            const history = currentChat ? Object.values(currentChat.messages || {}) : [];
-
-            // Формируем системный промпт
-            const apiMessages = [
-                { role: "system", content: "Ты — CatAI, умный помощник. Отвечай кратко и по делу на русском." }
-            ];
-
-            // Добавляем последние 10 сообщений из истории
-            const recentHistory = history.slice(-10);
-            
-            recentHistory.forEach(msg => {
-                // Пропускаем текущее сообщение, если оно уже есть в базе (чтобы не двоилось)
-                if (msg.content === userMessage && msg.role === 'user') return;
-                
-                apiMessages.push({
-                    role: msg.role === 'ai' ? 'assistant' : 'user',
-                    content: msg.content
-                });
-            });
-
-            // Добавляем текущий вопрос
-            apiMessages.push({ role: "user", content: userMessage });
-
             const url = "https://api.groq.com/openai/v1/chat/completions";
             const requestBody = {
                 model: "llama-3.3-70b-versatile",
-                messages: apiMessages
+                messages: [
+                    { role: "system", content: "Ты — CatAI, умный помощник. Твои правила:\n1. Отвечай на русском.\n2. ВАЖНО: Если сообщение содержит нецензурную лексику, мат или оскорбления, ты ОБЯЗАН ответить СТРОГО этой фразой: 'Я не могу ответить на ваше сообщение из-за содержания некорректных выражений'." },
+                    { role: "user", content: userMessage }
+                ]
             };
-
             try {
                 const response = await fetch(url, {
                     method: "POST",
@@ -269,6 +240,7 @@
             } catch (e) { return "Ошибка сети. Сервер не отвечает."; }
         }
 
+        // --- SEARCH ---
         const ACTION_WORDS = new Set(['как', 'сделать', 'приготовить', 'сварить', 'пожарить', 'рецепт', 'что', 'такое', 'зачем', 'почему', 'какой', 'при', 'на', 'в', 'с']);
         function cleanString(str) { return str.toLowerCase().trim().replace(/[\?\!\.\,\(\)\-\:]/g, ''); }
         function levenshtein(a, b) {
@@ -468,7 +440,7 @@
                         text = 'Ошибка: Нужна PRO подписка.';
                     } else {
                         document.getElementById('typing-text').textContent = "Генерация ответа...";
-                        const aiAnswer = await askAI(txt); // ВСЕГДА ИДЕМ В АИ
+                        const aiAnswer = await askAI(txt);
                         text = prefix + aiAnswer;
                     }
                 } else {
@@ -503,6 +475,7 @@
         document.getElementById('close-modal-btn').addEventListener('click', () => { window.location.hash = '#ai'; modelsModal.classList.add('hidden'); });
         document.getElementById('close-admin-modal-btn').addEventListener('click', () => { window.location.hash = '#ai'; adminModal.classList.add('hidden'); });
 
+        // SAFE SELECTORS
         document.querySelectorAll('input[name="model-selection"]').forEach(r => r.addEventListener('change', e => {
             const fs = document.getElementById('limit-selection-fieldset');
             if(fs) fs.classList.toggle('hidden', e.target.value !== 'pro');
@@ -567,7 +540,6 @@
             });
         }
 
-        // GLOBAL ADMIN FUNCTIONS
         window.adminCrashServer = async (reason) => {
             if(confirm(`ПОЛОЖИТЬ сервер с причиной: "${reason}"?`)) await set(ref(db, 'serverStatus'), { isOnline: false, reason: reason });
         };
