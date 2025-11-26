@@ -234,7 +234,7 @@
         </div>
     </div>
 
-    <script type="module">
+   <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
         import { getDatabase, ref, onValue, push, set, serverTimestamp, update, off, get } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
@@ -253,6 +253,7 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // UI VARS
         const pages = document.querySelectorAll('.page');
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
@@ -287,7 +288,7 @@
             });
         }
 
-        // === 1. УМНЫЙ ПОИСК 7.0 (HYBRID) ===
+        // === 1. УМНЫЙ ПОИСК 7.1 (FIX "ПРИВЕ") ===
         const ACTION_WORDS = new Set([
             'как', 'сделать', 'приготовить', 'сварить', 'пожарить', 'зажарить', 
             'испечь', 'запечь', 'сварганить', 'замутить', 'сообразить', 'намутить', 'создать',
@@ -315,6 +316,7 @@
         }
 
         function findBestMatch(userInput, db) {
+            // Фильтруем одиночные буквы
             const userWords = cleanString(userInput).split(/\s+/).filter(w => w.length > 1);
             let bestMatchKey = null, maxScore = 0;
 
@@ -328,27 +330,28 @@
                         const isAction = ACTION_WORDS.has(uWord) || ACTION_WORDS.has(dbWord);
                         const weight = isAction ? 2 : 10; 
 
-                        // 1. Exact match
+                        // 1. Точное совпадение
                         if (uWord === dbWord) {
-                            wordScore = weight;
+                            wordScore = weight; 
                         }
-                        // 2. Typo match (Levenshtein)
+                        // 2. Совпадение корней (ТОЛЬКО ЕСЛИ СЛОВО ДЛИННЕЕ 3 БУКВ)
+                        // Это фиксит проблему "приве" -> "при включении"
+                        else if ((dbWord.startsWith(uWord) || uWord.startsWith(dbWord)) && uWord.length > 3) {
+                            wordScore = weight * 0.8; 
+                        }
+                        // 3. Опечатки (Левенштейн)
                         else {
                             const dist = levenshtein(uWord, dbWord);
-                            // Allow 1 error for words > 3 chars, 2 for > 5 chars
-                            const allowedErrors = uWord.length > 5 ? 2 : (uWord.length > 3 ? 1 : 0);
-                            
-                            if (dist <= allowedErrors) {
-                                wordScore = weight * 0.8; // 80% points for typo
+                            const len = Math.min(uWord.length, dbWord.length);
+                            // Допускаем ошибки только в словах длиннее 3 букв
+                            if (len > 3) {
+                                let errorsAllowed = len > 5 ? 2 : 1;
+                                if (dist <= errorsAllowed) {
+                                    wordScore = weight * 0.6;
+                                }
                             }
-                            // 3. Root match (startswith)
-                         // Совпадение корней (ТОЛЬКО ЕСЛИ СЛОВО ДЛИННОЕ > 3 букв)
-                        // Это спасет "привеь" от "при включении"
-                        else if ((dbWord.startsWith(uWord) || uWord.startsWith(dbWord)) && uWord.length > 3) {
-                       wordScore = weight * 0.8; 
-                     }
+                        }
                         
-                        // Only add score if it improves previous match for this word pair
                         if(wordScore > 0) currentScore += wordScore;
                     });
                 });
@@ -625,7 +628,6 @@
             });
         }
 
-        // Global Functions
         window.adminCrashServer = async () => {
             const reason = document.getElementById('crash-reason-select').value;
             if(confirm(`ПОЛОЖИТЬ сервер с причиной: "${reason}"?`)) {
