@@ -3,83 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatAI | Stable Blue</title>
+    <title>CatAI | Ultimate Stable</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
     <style>
-        /* === ГЛОБАЛЬНАЯ ЧИСТКА СТИЛЕЙ === */
-        * {
-            -webkit-tap-highlight-color: transparent !important; /* Убирает мигание на мобилках */
-            outline: none !important; /* Убирает обводку при клике */
-        }
-
-        /* Принудительно синее выделение текста */
-        ::selection {
-            background-color: #2563eb !important; /* Синий */
-            color: white !important;
-        }
-
-        body {
-            background: radial-gradient(circle at top left, #0f172a, #000000); /* Темно-синий фон */
-            background-size: cover;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        /* Glassmorphism */
-        .glass {
-            background: rgba(30, 41, 59, 0.4); /* Синий оттенок */
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-        }
-        .glass-hover:hover {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: rgba(59, 130, 246, 0.3);
-        }
-
+        body { background: radial-gradient(circle at top left, #1a1c2c, #0f1016); background-size: cover; font-family: 'Segoe UI', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); }
+        .glass-hover:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-1px); }
         ul, li { list-style: none !important; margin: 0; padding: 0; }
-        
-        select {
-            -webkit-appearance: none; appearance: none;
-            background-color: #0f172a; color: white;
-        }
-        select option { background-color: #0f172a; color: white; padding: 10px; }
-
+        select { -webkit-appearance: none; appearance: none; background-color: #1f2937; color: white; }
+        select option { background-color: #1f2937; color: white; padding: 10px; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        
-        .typing-cursor { display: inline-block; width: 2px; height: 1em; background-color: white; animation: blink 1s step-end infinite; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+        .typing-cursor { display: inline-block; width: 2px; height: 1em; background-color: rgba(255,255,255,0.8); animation: blink 1s step-end infinite; vertical-align: middle; }
         @keyframes blink { 50% { opacity: 0; } }
-        
-        pre { background: #1e293b; padding: 1em; border-radius: 8px; overflow-x: auto; margin-top: 10px; }
+        pre { background: #282c34; padding: 1em; border-radius: 8px; overflow-x: auto; margin-top: 10px; }
         .message-content p { margin-bottom: 0.5em; }
+        
+        /* Активная вкладка */
+        .tab-active { border-bottom: 2px solid #3b82f6; color: white; background: rgba(255,255,255,0.05); }
+        .tab-inactive { color: #9ca3af; border-bottom: 2px solid transparent; }
     </style>
 </head>
-<body class="text-gray-100 h-full overflow-hidden selection:bg-blue-500 selection:text-white">
+<body class="text-gray-100 h-full overflow-hidden selection:bg-pink-500 selection:text-white">
 
-    <div id="server-offline-screen" class="hidden fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-4 text-center">
-        <div class="glass max-w-md w-full p-10 rounded-2xl border-red-500/30 shadow-lg">
+    <div id="server-offline-screen" class="hidden fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center p-4 text-center">
+        <div class="glass max-w-md w-full p-10 rounded-2xl border-red-500/30 shadow-[0_0_50px_rgba(220,38,38,0.2)]">
             <h2 class="text-3xl font-bold text-white mb-2">Сервер Offline</h2>
-            <p id="offline-reason" class="text-gray-400 mb-8">Технические работы.</p>
-            <button onclick="window.location.reload()" class="w-full py-3 px-4 bg-blue-600 text-white rounded-xl font-bold">Обновить</button>
-            <button id="admin-emergency-btn" onclick="window.adminReviveServer()" class="hidden mt-6 text-xs text-green-500 underline cursor-pointer">ВКЛЮЧИТЬ (ADMIN)</button>
+            <p id="offline-reason" class="text-gray-400 mb-8">Соединение разорвано.</p>
+            <button onclick="window.location.reload()" class="w-full py-3 px-4 bg-red-600 text-white rounded-xl">Обновить</button>
         </div>
     </div>
 
     <section id="login" class="page flex items-center justify-center h-full relative">
         <div class="glass w-full max-w-md p-10 rounded-3xl shadow-2xl z-10">
-            <h2 class="text-4xl font-bold text-center text-white mb-8 tracking-tight">CatAI Login</h2>
+            <h2 class="text-4xl font-bold text-center text-white mb-8">CatAI Login</h2>
             <form id="login-form" class="space-y-5">
-                <input type="email" id="login-email" placeholder="Email" class="w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-white focus:border-blue-500 transition" required>
-                <input type="password" id="login-password" placeholder="Пароль" class="w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-white focus:border-blue-500 transition" required>
-                <button type="submit" class="w-full py-4 font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition shadow-lg">Войти</button>
+                <input type="email" id="login-email" placeholder="Email" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl text-white" required>
+                <input type="password" id="login-password" placeholder="Пароль" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl text-white" required>
+                <button type="submit" class="w-full py-4 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-500 transition">Войти</button>
             </form>
             <p id="login-error" class="text-sm text-red-400 text-center h-5 mt-4"></p>
-            <p class="text-center text-sm text-gray-400 mt-6">Нет аккаунта? <a href="#register" class="text-blue-400 hover:text-blue-300">Создать</a></p>
+            <p class="text-center text-sm text-gray-400 mt-6">Нет аккаунта? <a href="#register" class="text-blue-400">Создать</a></p>
         </div>
     </section>
 
@@ -87,63 +56,63 @@
         <div class="glass w-full max-w-md p-10 rounded-3xl shadow-2xl z-10">
             <h2 class="text-3xl font-bold text-center text-white mb-8">Регистрация</h2>
             <form id="register-form" class="space-y-5">
-                <input type="email" id="register-email" placeholder="Email" class="w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-white focus:border-blue-500 transition" required>
-                <input type="password" id="register-password" placeholder="Пароль" class="w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-white focus:border-blue-500 transition" required>
-                <input type="password" id="register-password-confirm" placeholder="Повтор пароля" class="w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-white focus:border-blue-500 transition" required>
-                <button type="submit" class="w-full py-4 font-bold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl transition shadow-lg">Создать аккаунт</button>
+                <input type="email" id="register-email" placeholder="Email" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl text-white" required>
+                <input type="password" id="register-password" placeholder="Пароль" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl text-white" required>
+                <input type="password" id="register-password-confirm" placeholder="Повтор пароля" class="w-full px-5 py-4 bg-black/20 border border-white/10 rounded-xl text-white" required>
+                <button type="submit" class="w-full py-4 font-bold text-white bg-gradient-to-r from-pink-600 to-orange-600 hover:shadow-lg hover:shadow-pink-500/30 rounded-xl transition transform active:scale-95">Создать аккаунт</button>
             </form>
             <p id="register-error" class="text-sm text-red-400 text-center h-5 mt-4"></p>
-            <p class="text-center text-sm text-gray-400 mt-6">Уже есть? <a href="#login" class="text-blue-400 hover:text-blue-300">Войти</a></p>
+            <p class="text-center text-sm text-gray-400 mt-6">Уже есть? <a href="#login" class="text-pink-400">Войти</a></p>
         </div>
     </section>
 
     <section id="ai" class="page hidden h-full flex p-4 gap-4">
-        <div class="glass w-72 rounded-3xl flex flex-col overflow-hidden flex-shrink-0 border border-white/5">
+        <div class="glass w-72 rounded-3xl flex flex-col overflow-hidden flex-shrink-0">
             <div class="p-5 border-b border-white/5 flex justify-between items-center">
                 <button id="new-chat-btn" class="glass glass-hover flex-1 px-4 py-3 text-sm font-medium text-white rounded-xl flex items-center justify-center transition">
                     <span class="mr-2">+</span> Чат
                 </button>
-                <button id="clear-chat-btn" class="ml-2 p-3 glass glass-hover text-red-400 rounded-xl" title="Очистить">
+                <button id="clear-chat-btn" class="ml-2 p-3 glass glass-hover text-red-400 rounded-xl" title="Очистить этот чат">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 </button>
             </div>
             <ul id="chat-history-list" class="flex-1 overflow-y-auto space-y-2 p-3 block"></ul>
             <div class="p-4 border-t border-white/5 space-y-2">
-                 <a href="#models" id="models-btn" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition cursor-pointer">
+                 <a href="#models" id="models-btn" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition">
                     <svg class="h-5 w-5 mr-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg> Магазин
                 </a>
-                 <a href="#admin" id="admin-panel-btn" class="hidden flex items-center px-4 py-3 text-sm font-medium rounded-xl text-purple-400 hover:text-purple-200 hover:bg-purple-500/10 transition cursor-pointer">
+                 <a href="#admin" id="admin-panel-btn" class="hidden flex items-center px-4 py-3 text-sm font-medium rounded-xl text-yellow-400 hover:text-yellow-200 hover:bg-yellow-500/10 transition">
                       <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg> Админ
                  </a>
-                 <a href="#login" id="logout-btn" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-300 hover:text-red-300 hover:bg-red-500/10 transition cursor-pointer">
+                 <a href="#login" id="logout-btn" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-300 hover:text-red-300 hover:bg-red-500/10 transition">
                       <svg class="h-5 w-5 mr-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Выйти
                  </a>
             </div>
         </div>
         
-        <div class="glass flex-1 flex flex-col overflow-hidden relative rounded-3xl border border-white/5">
+        <div class="glass flex-1 flex flex-col overflow-hidden relative rounded-3xl">
             <div id="chat-messages" class="flex-1 overflow-y-auto p-8 space-y-6"></div>
-            <div id="typing-indicator" class="hidden absolute bottom-24 left-8 flex items-center space-x-2 bg-black/60 px-4 py-2 rounded-full backdrop-blur-md border border-white/10">
+            <div id="typing-indicator" class="hidden absolute bottom-24 left-8 flex items-center space-x-2 bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-white/5">
                 <div class="flex space-x-1"><div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div><div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay:0.1s"></div><div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay:0.2s"></div></div>
                 <span id="typing-text" class="text-xs text-gray-300 ml-2">Печатает...</span>
             </div>
-            <div class="p-5 bg-gradient-to-t from-black/60 to-transparent">
-                <form id="chat-form" class="flex items-center space-x-3 max-w-5xl mx-auto bg-black/40 p-2 rounded-2xl border border-white/10 backdrop-blur-md shadow-xl">
+            <div class="p-5 bg-gradient-to-t from-black/40 to-transparent">
+                <form id="chat-form" class="flex items-center space-x-3 max-w-5xl mx-auto bg-black/30 p-2 rounded-2xl border border-white/10 backdrop-blur-md">
                     <div class="relative group">
-                        <select id="model-select" class="w-32 bg-transparent border-none text-gray-300 text-sm rounded-xl focus:ring-0 cursor-pointer hover:text-white transition px-2 py-3 font-medium">
+                        <select id="model-select" class="w-32 bg-transparent border-none text-gray-300 text-sm rounded-xl focus:ring-0 cursor-pointer hover:text-white transition px-2 py-3">
                             <option value="base" class="bg-gray-900">Base</option>
                             <option value="fast" class="bg-gray-900">Fast</option>
                             <option value="pro" class="bg-gray-900">PRO</option>
                         </select>
                     </div>
                     <div class="w-px h-6 bg-white/10"></div>
-                    <input type="text" id="chat-input" placeholder="Сообщение..." class="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:ring-0 px-4 py-3" autocomplete="off">
+                    <input type="text" id="chat-input" placeholder="Напиши что-нибудь..." class="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:ring-0 px-4 py-3" autocomplete="off">
                     
-                    <div id="credits-display" class="text-xs font-bold text-blue-300 bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 whitespace-nowrap hidden sm:block">...</div>
+                    <div id="credits-display" class="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20 whitespace-nowrap hidden sm:block">Загрузка...</div>
 
-                    <button type="submit" class="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition shadow-lg hover:shadow-blue-500/20">➔</button>
+                    <button type="submit" class="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition shadow-lg">➔</button>
                     <div class="relative ml-2">
-                        <select id="source-select" class="w-24 bg-gray-700/50 border border-white/10 text-gray-200 text-xs font-bold rounded-xl focus:ring-0 cursor-pointer hover:bg-gray-700 transition px-2 py-3 uppercase tracking-wider">
+                        <select id="source-select" class="w-24 bg-blue-600/20 border border-blue-500/30 text-blue-200 text-xs font-bold rounded-xl focus:ring-0 cursor-pointer hover:bg-blue-600/40 transition px-2 py-3 uppercase tracking-wider">
                             <option value="json">JSON</option>
                             <option value="ai">AI</option>
                             <option value="hybrid" selected>AUTO</option>
@@ -156,20 +125,19 @@
 
     <div id="models-modal" class="page hidden fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" id="modal-backdrop"></div>
-        <div class="glass relative w-full max-w-2xl rounded-3xl overflow-hidden transform transition-all border border-white/10">
+        <div class="glass relative w-full max-w-2xl rounded-3xl overflow-hidden transform transition-all">
             <div id="modal-state-default" class="p-8 flex flex-col h-[600px]">
-                <h3 class="text-2xl font-bold text-white mb-1">Магазин</h3>
-                <p class="text-gray-400 text-sm mb-4">Выберите валюту. Цвета: <span class="text-blue-400">Энергия</span> и <span class="text-purple-400">Кристаллы</span>.</p>
+                <h3 class="text-2xl font-bold text-white mb-1">Магазин CatAI</h3>
+                <p class="text-gray-400 text-sm mb-4">Энергия (для Base) и Кристаллы (для PRO) — разные валюты.</p>
                 <div class="flex-1 grid grid-cols-2 gap-6 overflow-y-auto pr-1">
                     <div class="space-y-3">
-                        <h4 class="text-blue-400 font-bold text-sm uppercase border-b border-blue-500/20 pb-2 mb-2">⚡ Энергия (Base)</h4>
-                        <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-blue-500 block"><input name="limit-selection" type="radio" value="energy-10" class="sr-only"><span class="block text-lg font-bold text-white">10 ⚡</span><span class="text-xs text-gray-400">Мини</span></label>
-                        <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-blue-500 block"><input name="limit-selection" type="radio" value="energy-30" class="sr-only"><span class="block text-lg font-bold text-white">30 ⚡</span><span class="text-xs text-gray-400">Старт</span></label>
-                        <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-blue-500 block"><input name="limit-selection" type="radio" value="energy-50" class="sr-only"><span class="block text-lg font-bold text-white">50 ⚡</span><span class="text-xs text-gray-400">Оптимум</span></label>
-                        <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-blue-500 block"><input name="limit-selection" type="radio" value="energy-100" class="sr-only"><span class="block text-lg font-bold text-white">100 ⚡</span><span class="text-xs text-gray-400">Макс</span></label>
+                        <h4 class="text-yellow-400 font-bold text-sm uppercase border-b border-yellow-500/20 pb-2 mb-2">⚡ Энергия (Base/Fast)</h4>
+                        <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-yellow-500 block"><input name="limit-selection" type="radio" value="energy-30" class="sr-only"><span class="block text-lg font-bold text-white">30 ⚡</span><span class="text-xs text-gray-400">Старт</span></label>
+                        <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-yellow-500 block"><input name="limit-selection" type="radio" value="energy-50" class="sr-only"><span class="block text-lg font-bold text-white">50 ⚡</span><span class="text-xs text-gray-400">Оптимум</span></label>
+                        <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-yellow-500 block"><input name="limit-selection" type="radio" value="energy-100" class="sr-only"><span class="block text-lg font-bold text-white">100 ⚡</span><span class="text-xs text-gray-400">Максимум</span></label>
                     </div>
                     <div class="space-y-3">
-                        <h4 class="text-purple-400 font-bold text-sm uppercase border-b border-purple-500/20 pb-2 mb-2">💎 Кристаллы (Pro)</h4>
+                        <h4 class="text-purple-400 font-bold text-sm uppercase border-b border-purple-500/20 pb-2 mb-2">💎 Кристаллы (PRO)</h4>
                         <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-purple-500 block"><input name="limit-selection" type="radio" value="pro-10" class="sr-only"><span class="block text-lg font-bold text-white">10 💎</span><span class="text-xs text-gray-400">Тест</span></label>
                         <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-purple-500 block"><input name="limit-selection" type="radio" value="pro-30" class="sr-only"><span class="block text-lg font-bold text-white">30 💎</span><span class="text-xs text-gray-400">Стандарт</span></label>
                         <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-purple-500 block"><input name="limit-selection" type="radio" value="pro-50" class="sr-only"><span class="block text-lg font-bold text-white">50 💎</span><span class="text-xs text-gray-400">Профи</span></label>
@@ -181,13 +149,13 @@
                     <button id="purchase-btn" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition shadow-lg" disabled>Купить</button>
                 </div>
             </div>
-            <div id="modal-state-waiting" class="hidden p-12 text-center"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div><h3 class="text-lg text-white">Обработка...</h3></div>
+            <div id="modal-state-waiting" class="hidden p-12 text-center"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div><h3 class="text-lg text-white">Ожидание подтверждения...</h3></div>
         </div>
     </div>
 
     <div id="admin-modal" class="page hidden fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" id="admin-modal-backdrop"></div>
-        <div class="glass relative w-full max-w-3xl h-[600px] flex flex-col rounded-3xl overflow-hidden border border-white/10">
+        <div class="glass relative w-full max-w-3xl h-[600px] flex flex-col rounded-3xl overflow-hidden">
             <div class="flex border-b border-white/10 bg-black/20">
                 <button id="tab-requests-btn" onclick="window.switchAdminTab('requests')" class="flex-1 py-4 text-sm font-medium text-white border-b-2 border-blue-500 bg-white/5 transition tab-active">Запросы</button>
                 <button id="tab-management-btn" onclick="window.switchAdminTab('server')" class="flex-1 py-4 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition tab-inactive">Сервер</button>
@@ -196,15 +164,15 @@
                 <div id="tab-requests-content" class="space-y-4"><h3 class="text-lg font-bold text-white mb-4">Активные запросы</h3><div id="admin-requests-list" class="space-y-3"></div></div>
                 <div id="tab-management-content" class="hidden space-y-6">
                     <div class="glass p-6 rounded-2xl border-red-500/30">
-                        <h3 class="text-lg font-bold text-red-400 mb-4">Управление сервером</h3>
+                        <h3 class="text-lg font-bold text-red-400 mb-4">Положить сервер</h3>
                         <div class="grid grid-cols-2 gap-3">
-                            <button onclick="window.adminCrashServer('Обновление')" class="p-3 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm text-white transition border border-gray-600">🛠 Обновление</button>
-                            <button onclick="window.adminCrashServer('Сбой')" class="p-3 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm text-white transition border border-gray-600">⚠️ Сбой</button>
-                            <button onclick="window.adminCrashServer('Сервер устал')" class="p-3 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm text-white transition border border-gray-600">😴 Шутка</button>
-                            <button onclick="window.adminDisconnectServer()" class="p-3 bg-orange-600 hover:bg-orange-500 rounded-xl text-sm text-white transition font-bold shadow-lg">⛔ Разрыв связи</button>
+                            <button onclick="window.adminCrashServer('Обновление')" class="p-3 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm text-white transition border border-gray-500">🛠 Обновление</button>
+                            <button onclick="window.adminCrashServer('Сбой')" class="p-3 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm text-white transition border border-gray-500">⚠️ Сбой</button>
+                            <button onclick="window.adminCrashServer('Сервер устал')" class="p-3 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm text-white transition border border-gray-500">😴 Шутка</button>
+                            <button onclick="window.adminDisconnectServer()" class="p-3 bg-orange-600 hover:bg-orange-500 rounded-xl text-sm text-white transition font-bold">⛔ Разрыв связи</button>
                         </div>
                     </div>
-                    <div class="glass p-6 rounded-2xl border-green-500/30 text-center"><button onclick="window.adminReviveServer()" class="w-full py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold shadow-lg transition">🟢 ВКЛЮЧИТЬ ВСЁ</button></div>
+                    <div class="glass p-6 rounded-2xl border-green-500/30 text-center"><button onclick="window.adminReviveServer()" class="w-full py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold">ВКЛЮЧИТЬ ВСЁ</button></div>
                 </div>
             </div>
             <div class="p-4 border-t border-white/10 flex justify-end"><button id="close-admin-modal-btn" class="px-6 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition">Закрыть</button></div>
@@ -232,7 +200,6 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        const pages = document.querySelectorAll('.page');
         const chatHistoryList = document.getElementById('chat-history-list');
         const chatMessages = document.getElementById('chat-messages');
         const typingIndicator = document.getElementById('typing-indicator');
@@ -248,21 +215,23 @@
         let knowledgeBase = {};
         let subscriptionData = { free_credits: 10, purchased_energy: 0, pro_credits: 0, last_free_reset: 0 };
         const FREE_LIMIT = 10;
-        const RESET_PERIOD = 3 * 60 * 60 * 1000; 
+        const RESET_PERIOD = 3 * 60 * 60 * 1000;
 
+        // GLOBAL TABS FUNCTION (NO MORE EVENT LISTENER BUGS)
         window.switchAdminTab = (tab) => {
             const reqBtn = document.getElementById('tab-requests-btn');
             const srvBtn = document.getElementById('tab-management-btn');
             const reqContent = document.getElementById('tab-requests-content');
             const srvContent = document.getElementById('tab-management-content');
+
             if (tab === 'requests') {
                 reqContent.classList.remove('hidden'); srvContent.classList.add('hidden');
-                reqBtn.classList.add('border-b-2', 'border-blue-500', 'text-white'); reqBtn.classList.remove('text-gray-400');
-                srvBtn.classList.remove('border-b-2', 'border-blue-500', 'text-white'); srvBtn.classList.add('text-gray-400');
+                reqBtn.classList.add('tab-active', 'text-white'); reqBtn.classList.remove('text-gray-400', 'tab-inactive');
+                srvBtn.classList.remove('tab-active', 'text-white'); srvBtn.classList.add('text-gray-400', 'tab-inactive');
             } else {
                 reqContent.classList.add('hidden'); srvContent.classList.remove('hidden');
-                srvBtn.classList.add('border-b-2', 'border-blue-500', 'text-white'); srvBtn.classList.remove('text-gray-400');
-                reqBtn.classList.remove('border-b-2', 'border-blue-500', 'text-white'); reqBtn.classList.add('text-gray-400');
+                srvBtn.classList.add('tab-active', 'text-white'); srvBtn.classList.remove('text-gray-400', 'tab-inactive');
+                reqBtn.classList.remove('tab-active', 'text-white'); reqBtn.classList.add('text-gray-400', 'tab-inactive');
             }
         };
 
@@ -270,16 +239,10 @@
             onValue(ref(db, 'serverStatus'), (snapshot) => {
                 const status = snapshot.val();
                 if (!status) return; 
-                if (status.isOnline === false) {
-                    if (isAdmin) { offlineScreen.classList.add('hidden'); } 
-                    else {
-                        offlineReasonText.textContent = status.reason || "Ошибка подключения.";
-                        offlineScreen.classList.remove('hidden'); offlineScreen.classList.add('flex');
-                    }
+                if (status.isOnline === false && !isAdmin) {
+                    offlineReasonText.textContent = status.reason || "Ошибка подключения.";
+                    offlineScreen.classList.remove('hidden'); offlineScreen.classList.add('flex');
                 } else { offlineScreen.classList.add('hidden'); offlineScreen.classList.remove('flex'); }
-                
-                const admBtn = document.getElementById('admin-emergency-btn');
-                if(admBtn) admBtn.classList.toggle('hidden', !isAdmin);
             });
         }
 
@@ -479,7 +442,6 @@
 
             await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'user', content: txt });
             
-            // --- ECONOMY ---
             const useAI = (source === 'ai' || source === 'hybrid');
             let canUseAI = true;
             
@@ -493,6 +455,7 @@
                 const isProModel = (model === 'pro');
 
                 if (isProModel) {
+                    // PRO ONLY USES GEMS
                     if (pro <= 0) {
                          canUseAI = false;
                          await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: "💎 Недостаточно кристаллов. Купите в магазине." });
@@ -500,10 +463,12 @@
                     }
                     await update(ref(db, `users/${currentUserId}/subscription`), { pro_credits: pro - 1 });
                 } else {
+                    // BASE/FAST: FREE -> PURCHASED
                     if (now - lastReset > RESET_PERIOD) {
                         free = FREE_LIMIT;
                         await update(ref(db, `users/${currentUserId}/subscription`), { free_credits: FREE_LIMIT, last_free_reset: now });
                     }
+
                     if (free > 0) {
                         await update(ref(db, `users/${currentUserId}/subscription`), { free_credits: free - 1 });
                     } else if (purchased > 0) {
@@ -549,10 +514,8 @@
 
             if (isPro) {
                 creditsDisplay.textContent = `💎 ${pro}`;
-                creditsDisplay.className = "text-xs font-bold text-purple-400 bg-purple-500/10 px-3 py-1.5 rounded-lg border border-purple-500/20 whitespace-nowrap hidden sm:block";
             } else {
                 creditsDisplay.textContent = `⚡ ${free}/${FREE_LIMIT} (+${purchased})`;
-                creditsDisplay.className = "text-xs font-bold text-blue-300 bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 whitespace-nowrap hidden sm:block";
             }
         }
 
@@ -570,6 +533,7 @@
         }
         modelSelect.addEventListener('change', updateCreditsUI);
 
+        // --- MODALS & BUY ---
         const modelsModal = document.getElementById('models-modal');
         const adminModal = document.getElementById('admin-modal');
         document.getElementById('models-btn').addEventListener('click', () => window.location.hash = '#models');
@@ -578,7 +542,7 @@
         document.getElementById('close-admin-modal-btn').addEventListener('click', () => { window.location.hash = '#ai'; adminModal.classList.add('hidden'); });
 
         document.querySelectorAll('input[name="limit-selection"]').forEach(r => r.addEventListener('change', () => { 
-            const btn = document.getElementById('purchase-btn'); btn.disabled=false; btn.textContent='Купить'; 
+            document.getElementById('purchase-btn').disabled=false; 
         }));
 
         document.getElementById('purchase-btn').addEventListener('click', async () => {
