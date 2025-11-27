@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatAI | Ultimate Edition</title>
+    <title>CatAI | Ultimate Economy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
@@ -141,7 +141,7 @@
         <div class="glass relative w-full max-w-lg rounded-3xl overflow-hidden transform transition-all">
             <div id="modal-state-default" class="p-8">
                 <h3 class="text-2xl font-bold text-white mb-2">Магазин CatAI</h3>
-                <p class="text-gray-400 text-sm mb-4">Покупайте пакеты сообщений для использования AI. JSON работает бесплатно.</p>
+                <p class="text-gray-400 text-sm mb-4">Покупайте пакеты сообщений для использования AI.</p>
                 
                 <div id="limit-selection-fieldset" class="grid grid-cols-3 gap-3 mt-6">
                     <label class="glass glass-hover p-4 rounded-xl text-center cursor-pointer"><input name="limit-selection" type="radio" value="100" class="sr-only"><span class="block text-xl font-bold text-white">100</span><span class="text-xs text-gray-400">сообщений</span></label>
@@ -211,16 +211,17 @@
         const offlineScreen = document.getElementById('server-offline-screen');
         const offlineReasonText = document.getElementById('offline-reason');
         const creditsDisplay = document.getElementById('credits-display');
+        const modelSelect = document.getElementById('model-select');
         
         let currentUserId = null;
         let isAdmin = false;
         let userChatsData = {};
         let currentActiveChatId = null;
         let knowledgeBase = {};
-        // FIX: Дефолтные значения (чтобы не было undefined)
-        let subscriptionData = { type: 'free', ai_credits: 10, last_reset: 0 };
+        // Default state
+        let subscriptionData = { free_credits: 10, pro_credits: 0, last_free_reset: 0 };
         const FREE_LIMIT = 10;
-        const RESET_PERIOD = 3 * 60 * 60 * 1000; // 3 часа
+        const RESET_PERIOD = 3 * 60 * 60 * 1000; // 3 hours
 
         function setupServerStatusListener() {
             onValue(ref(db, 'serverStatus'), (snapshot) => {
@@ -444,41 +445,53 @@
 
             await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'user', content: txt });
             
-            // --- LIMITS CHECK ---
+            // --- ECONOMY LOGIC 2.0 (FIXED) ---
             const useAI = (source === 'ai' || source === 'hybrid');
             let canUseAI = true;
             
             if (useAI) {
+                // 1. Safe fallback values
+                let currentFree = (subscriptionData.free_credits !== undefined) ? subscriptionData.free_credits : 10;
+                let currentPro = (subscriptionData.pro_credits !== undefined) ? subscriptionData.pro_credits : 0;
+                let lastReset = subscriptionData.last_free_reset || 0;
                 const now = new Date().getTime();
-                // FIX: Используем значения по умолчанию, если загрузка еще не прошла
-                let credits = (subscriptionData && subscriptionData.ai_credits !== undefined) ? subscriptionData.ai_credits : 10;
-                let lastReset = (subscriptionData && subscriptionData.last_reset) ? subscriptionData.last_reset : 0;
-                let type = (subscriptionData && subscriptionData.type) ? subscriptionData.type : 'free';
 
-                if (type === 'free') {
-                    if (now - lastReset > RESET_PERIOD) {
-                        credits = FREE_LIMIT;
-                        // Обновляем в базе
-                        await update(ref(db, `users/${currentUserId}/subscription`), { ai_credits: FREE_LIMIT, last_reset: now });
+                // 2. Which wallet to use?
+                const isProModel = (model === 'pro');
+
+                if (isProModel) {
+                    // Use PRO credits
+                    if (currentPro <= 0) {
+                         canUseAI = false;
+                         await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: "💎 Закончились PRO кредиты. Купите в магазине." });
+                         return;
                     }
-                }
+                    // Deduct
+                    if (canUseAI) await update(ref(db, `users/${currentUserId}/subscription`), { pro_credits: currentPro - 1 });
 
-                if (credits <= 0) {
-                    canUseAI = false;
-                    const msg = type === 'free' ? "Лимит исчерпан. Ждите 3 часа или купите PRO." : "Купленные сообщения закончились.";
-                    await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: msg });
-                    return; // STOP
-                }
-                
-                // Списываем
-                if (canUseAI) {
-                    await update(ref(db, `users/${currentUserId}/subscription`), { ai_credits: credits - 1 });
+                } else {
+                    // Use FREE credits (Base/Fast)
+                    
+                    // Check auto-refill
+                    if (now - lastReset > RESET_PERIOD) {
+                        currentFree = FREE_LIMIT;
+                        await update(ref(db, `users/${currentUserId}/subscription`), { free_credits: FREE_LIMIT, last_free_reset: now });
+                    }
+
+                    if (currentFree <= 0) {
+                         canUseAI = false;
+                         // Calc remaining time
+                         const waitTime = Math.ceil((RESET_PERIOD - (now - lastReset)) / (1000 * 60)); // minutes
+                         await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: `⚡ Энергия кончилась. Восстановится через ${waitTime} мин.` });
+                         return;
+                    }
+                    // Deduct
+                    if (canUseAI) await update(ref(db, `users/${currentUserId}/subscription`), { free_credits: currentFree - 1 });
                 }
             }
 
             typingIndicator.classList.remove('hidden');
             const aiMode = (model === 'pro') ? 'smart' : 'dumb';
-            
             let text = '';
             
             if (source === 'json') {
@@ -487,6 +500,7 @@
             } else if (source === 'ai') {
                  if(canUseAI) text = await askAI(txt, aiMode);
             } else {
+                // Hybrid
                 const local = findBestMatch(txt, knowledgeBase);
                 if (local) text = local;
                 else if (canUseAI) text = await askAI(txt, aiMode);
@@ -494,7 +508,6 @@
             }
 
             typingIndicator.classList.add('hidden');
-            const parsedHTML = marked.parse(text);
             const tempDiv = appendMessageToUI('ai', text);
             
             await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: text });
@@ -502,38 +515,45 @@
 
         document.getElementById('new-chat-btn').addEventListener('click', createNewChat);
 
-        // --- SUBSCRIPTION (UPDATE UI) ---
+        // --- SUBSCRIPTION & UPDATE UI ---
+        function updateCreditsUI() {
+            const model = modelSelect.value;
+            const isPro = (model === 'pro');
+            
+            let display = '...';
+            
+            // Fallbacks
+            const free = (subscriptionData.free_credits !== undefined) ? subscriptionData.free_credits : 10;
+            const pro = (subscriptionData.pro_credits !== undefined) ? subscriptionData.pro_credits : 0;
+
+            if (isPro) {
+                display = `💎 ${pro}`;
+            } else {
+                display = `⚡ ${free}/${FREE_LIMIT}`;
+            }
+            creditsDisplay.textContent = display;
+        }
+
+        // Listener for Data changes
         function setupSubscriptionListener(uid) {
             onValue(ref(db, `users/${uid}/subscription`), s => {
                 const val = s.val();
                 if (!val) {
-                    // Создаем начальную подписку, если её нет
-                    subscriptionData = { type: 'free', ai_credits: 10, last_reset: 0 };
+                    // Init default
+                    subscriptionData = { free_credits: 10, pro_credits: 0, last_free_reset: 0 };
                     set(ref(db, `users/${uid}/subscription`), subscriptionData);
                 } else {
                     subscriptionData = val;
                 }
-
-                // Обновляем счетчик на экране (Dynamic Update)
-                const modelSelect = document.getElementById('model-select');
-                const isPro = (modelSelect.value === 'pro');
-                
-                let displaytext = '';
-                if (subscriptionData.type === 'free') {
-                     displaytext = `⚡ ${subscriptionData.ai_credits}/${FREE_LIMIT}`;
-                } else {
-                     displaytext = `💎 ${subscriptionData.ai_credits}`;
-                }
-                creditsDisplay.textContent = displaytext;
+                updateCreditsUI();
             });
         }
         
-        // Switch Credits on Model Change
-        document.getElementById('model-select').addEventListener('change', () => {
-             // При смене модели просто перерисовываем текущие данные
-             // В будущем можно сделать разную валюту для разных моделей, но пока используем общую
-        });
+        // Listener for Model Change (to switch counter instantly)
+        modelSelect.addEventListener('change', updateCreditsUI);
+
         
+        // Modals logic
         const modelsModal = document.getElementById('models-modal');
         const adminModal = document.getElementById('admin-modal');
         document.getElementById('models-btn').addEventListener('click', () => window.location.hash = '#models');
@@ -541,12 +561,6 @@
         document.getElementById('close-modal-btn').addEventListener('click', () => { window.location.hash = '#ai'; modelsModal.classList.add('hidden'); });
         document.getElementById('close-admin-modal-btn').addEventListener('click', () => { window.location.hash = '#ai'; adminModal.classList.add('hidden'); });
 
-        document.querySelectorAll('input[name="model-selection"]').forEach(r => r.addEventListener('change', e => {
-            const fs = document.getElementById('limit-selection-fieldset');
-            if(fs) fs.classList.toggle('hidden', e.target.value !== 'pro');
-            const btn = document.getElementById('purchase-btn');
-            if(btn && e.target.value !== 'pro') { btn.disabled=true; btn.textContent='Бесплатно'; }
-        }));
         document.querySelectorAll('input[name="limit-selection"]').forEach(r => r.addEventListener('change', () => { 
             const btn = document.getElementById('purchase-btn'); btn.disabled=false; btn.textContent='Купить'; 
         }));
@@ -559,10 +573,11 @@
             document.getElementById('modal-state-default').classList.add('hidden');
             onValue(reqRef, s => {
                 const d = s.val(); if(!d) return;
-                if(d.status === 'confirmed') { alert('Успешно!'); window.location.reload(); }
+                if(d.status === 'confirmed') { alert('Успешно!'); window.location.hash='#ai'; modelsModal.classList.add('hidden'); window.location.reload(); }
             });
         });
 
+        // Admin
         function setupAdminListeners() {
             onValue(ref(db, 'purchaseRequests'), s => {
                 const list = document.getElementById('admin-requests-list');
@@ -584,10 +599,13 @@
         window.adminReviveServer = async () => { await set(ref(db, 'serverStatus'), { isOnline: true, reason: '' }); };
 
         window.confirmReq = async (rid, uid, pack) => { 
+            // Get current credits first to ADD, not overwrite
             const snap = await get(ref(db, `users/${uid}/subscription`));
-            const current = snap.val() || { ai_credits: 0 };
-            const newCredits = (current.ai_credits || 0) + pack;
-            await set(ref(db, `users/${uid}/subscription`), { type: 'pro', ai_credits: newCredits, last_reset: 0 }); 
+            const current = snap.val() || { pro_credits: 0 };
+            const newTotal = (current.pro_credits || 0) + pack;
+            
+            // Update ONLY pro_credits field
+            await update(ref(db, `users/${uid}/subscription`), { pro_credits: newTotal }); 
             await update(ref(db, `purchaseRequests/${rid}`), { status: 'confirmed' }); 
         };
         window.rejectReq = async (rid) => await update(ref(db, `purchaseRequests/${rid}`), { status: 'canceled' });
