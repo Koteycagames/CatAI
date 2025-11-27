@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatAI | Ultimate Economy</title>
+    <title>CatAI | Ultimate Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
@@ -30,11 +30,17 @@
         ul, li { list-style: none !important; margin: 0; padding: 0; }
         select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background-color: #1f2937; color: white; }
         select option { background-color: #1f2937; color: white; padding: 10px; }
+        
+        /* Тонкие скроллбары */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+        
         .typing-cursor { display: inline-block; width: 2px; height: 1em; background-color: rgba(255,255,255,0.8); animation: blink 1s step-end infinite; vertical-align: middle; }
         @keyframes blink { 50% { opacity: 0; } }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
         pre { background: #282c34; padding: 1em; border-radius: 8px; overflow-x: auto; margin-top: 10px; }
         code { font-family: 'Courier New', Courier, monospace; font-size: 0.9em; }
         .message-content p { margin-bottom: 0.5em; }
@@ -120,7 +126,7 @@
                     <input type="text" id="chat-input" placeholder="Напиши что-нибудь..." class="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:ring-0 px-4 py-3" autocomplete="off">
                     
                     <div id="credits-display" class="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20 whitespace-nowrap hidden sm:block">
-                        Загрузка...
+                        ...
                     </div>
 
                     <button type="submit" class="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition shadow-lg">➔</button>
@@ -141,14 +147,37 @@
         <div class="glass relative w-full max-w-lg rounded-3xl overflow-hidden transform transition-all">
             <div id="modal-state-default" class="p-8">
                 <h3 class="text-2xl font-bold text-white mb-2">Магазин CatAI</h3>
-                <p class="text-gray-400 text-sm mb-4">Покупайте пакеты сообщений для использования AI.</p>
+                <p class="text-gray-400 text-sm mb-4">Купите сообщения. Работают для всех моделей (для Base/Fast — когда кончится лимит).</p>
                 
-                <div id="limit-selection-fieldset" class="grid grid-cols-3 gap-3 mt-6">
-                    <label class="glass glass-hover p-4 rounded-xl text-center cursor-pointer"><input name="limit-selection" type="radio" value="100" class="sr-only"><span class="block text-xl font-bold text-white">100</span><span class="text-xs text-gray-400">сообщений</span></label>
-                    <label class="glass glass-hover p-4 rounded-xl text-center cursor-pointer"><input name="limit-selection" type="radio" value="300" class="sr-only"><span class="block text-xl font-bold text-yellow-400">300</span><span class="text-xs text-gray-400">сообщений</span></label>
-                    <label class="glass glass-hover p-4 rounded-xl text-center cursor-pointer"><input name="limit-selection" type="radio" value="500" class="sr-only"><span class="block text-xl font-bold text-purple-400">500</span><span class="text-xs text-gray-400">сообщений</span></label>
+                <div id="limit-selection-fieldset" class="grid grid-cols-2 gap-3 mt-4 max-h-60 overflow-y-auto pr-1">
+                    
+                    <label class="glass glass-hover p-4 rounded-xl text-center cursor-pointer border border-white/5">
+                        <input name="limit-selection" type="radio" value="10" class="sr-only">
+                        <span class="block text-xl font-bold text-white">10</span>
+                        <span class="text-xs text-gray-400">сообщений</span>
+                    </label>
+
+                    <label class="glass glass-hover p-4 rounded-xl text-center cursor-pointer border border-white/5">
+                        <input name="limit-selection" type="radio" value="30" class="sr-only">
+                        <span class="block text-xl font-bold text-blue-300">30</span>
+                        <span class="text-xs text-gray-400">сообщений</span>
+                    </label>
+
+                    <label class="glass glass-hover p-4 rounded-xl text-center cursor-pointer border border-white/5">
+                        <input name="limit-selection" type="radio" value="50" class="sr-only">
+                        <span class="block text-xl font-bold text-purple-400">50</span>
+                        <span class="text-xs text-gray-400">сообщений</span>
+                    </label>
+
+                    <label class="glass glass-hover p-4 rounded-xl text-center cursor-pointer border border-yellow-500/30">
+                        <input name="limit-selection" type="radio" value="100" class="sr-only">
+                        <span class="block text-xl font-bold text-yellow-400">100</span>
+                        <span class="text-xs text-gray-400">сообщений (ХИТ)</span>
+                    </label>
+
                 </div>
-                <div class="mt-8 flex justify-end space-x-3">
+                
+                <div class="mt-6 flex justify-end space-x-3">
                     <button id="close-modal-btn" class="px-6 py-3 rounded-xl text-gray-300 hover:bg-white/10 transition">Закрыть</button>
                     <button id="purchase-btn" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition shadow-lg" disabled>Купить</button>
                 </div>
@@ -218,10 +247,10 @@
         let userChatsData = {};
         let currentActiveChatId = null;
         let knowledgeBase = {};
-        // Default state
+        // Структура: free (восстанавливаются), pro (купленные, вечные)
         let subscriptionData = { free_credits: 10, pro_credits: 0, last_free_reset: 0 };
         const FREE_LIMIT = 10;
-        const RESET_PERIOD = 3 * 60 * 60 * 1000; // 3 hours
+        const RESET_PERIOD = 3 * 60 * 60 * 1000; // 3 часа
 
         function setupServerStatusListener() {
             onValue(ref(db, 'serverStatus'), (snapshot) => {
@@ -240,7 +269,7 @@
         async function askAI(userMessage, mode) {
             const url = "https://api.groq.com/openai/v1/chat/completions";
             let systemContent = "Ты — CatAI. Отвечай на русском.";
-            if (mode === 'dumb') systemContent += " Отвечай кратко. НЕ ПИШИ КОД.";
+            if (mode === 'dumb') systemContent += " Отвечай кратко. НЕ ПИШИ КОД. Говори что код только в PRO.";
             else systemContent += " Ты эксперт. Пиши код красиво в Markdown.";
             systemContent += "\nЕсли мат - не отвечай.";
 
@@ -445,48 +474,48 @@
 
             await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'user', content: txt });
             
-            // --- ECONOMY LOGIC 2.0 (FIXED) ---
+            // --- UNIVERSAL CREDIT LOGIC ---
             const useAI = (source === 'ai' || source === 'hybrid');
             let canUseAI = true;
             
             if (useAI) {
-                // 1. Safe fallback values
-                let currentFree = (subscriptionData.free_credits !== undefined) ? subscriptionData.free_credits : 10;
-                let currentPro = (subscriptionData.pro_credits !== undefined) ? subscriptionData.pro_credits : 0;
-                let lastReset = subscriptionData.last_free_reset || 0;
                 const now = new Date().getTime();
+                let free = (subscriptionData.free_credits !== undefined) ? subscriptionData.free_credits : 10;
+                let pro = (subscriptionData.pro_credits !== undefined) ? subscriptionData.pro_credits : 0;
+                let lastReset = subscriptionData.last_free_reset || 0;
 
-                // 2. Which wallet to use?
                 const isProModel = (model === 'pro');
 
                 if (isProModel) {
-                    // Use PRO credits
-                    if (currentPro <= 0) {
+                    // PRO MODEL: ONLY PRO CREDITS
+                    if (pro <= 0) {
                          canUseAI = false;
-                         await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: "💎 Закончились PRO кредиты. Купите в магазине." });
+                         await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: "💎 Для PRO модели нужны купленные сообщения. Купите в магазине." });
                          return;
                     }
-                    // Deduct
-                    if (canUseAI) await update(ref(db, `users/${currentUserId}/subscription`), { pro_credits: currentPro - 1 });
-
+                    await update(ref(db, `users/${currentUserId}/subscription`), { pro_credits: pro - 1 });
                 } else {
-                    // Use FREE credits (Base/Fast)
+                    // BASE/FAST: FREE -> THEN PAID
                     
-                    // Check auto-refill
+                    // 1. Try Auto-Refill
                     if (now - lastReset > RESET_PERIOD) {
-                        currentFree = FREE_LIMIT;
+                        free = FREE_LIMIT;
                         await update(ref(db, `users/${currentUserId}/subscription`), { free_credits: FREE_LIMIT, last_free_reset: now });
                     }
 
-                    if (currentFree <= 0) {
+                    if (free > 0) {
+                        // Use Free
+                        await update(ref(db, `users/${currentUserId}/subscription`), { free_credits: free - 1 });
+                    } else if (pro > 0) {
+                        // Use Paid (Fallback)
+                        await update(ref(db, `users/${currentUserId}/subscription`), { pro_credits: pro - 1 });
+                    } else {
+                         // No credits left
                          canUseAI = false;
-                         // Calc remaining time
-                         const waitTime = Math.ceil((RESET_PERIOD - (now - lastReset)) / (1000 * 60)); // minutes
-                         await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: `⚡ Энергия кончилась. Восстановится через ${waitTime} мин.` });
+                         const waitTime = Math.ceil((RESET_PERIOD - (now - lastReset)) / (1000 * 60));
+                         await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: `⚡ Бесплатные сообщения кончились. Ждите ${waitTime} мин или купите пакет.` });
                          return;
                     }
-                    // Deduct
-                    if (canUseAI) await update(ref(db, `users/${currentUserId}/subscription`), { free_credits: currentFree - 1 });
                 }
             }
 
@@ -500,7 +529,6 @@
             } else if (source === 'ai') {
                  if(canUseAI) text = await askAI(txt, aiMode);
             } else {
-                // Hybrid
                 const local = findBestMatch(txt, knowledgeBase);
                 if (local) text = local;
                 else if (canUseAI) text = await askAI(txt, aiMode);
@@ -509,37 +537,30 @@
 
             typingIndicator.classList.add('hidden');
             const tempDiv = appendMessageToUI('ai', text);
-            
             await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: text });
         });
 
         document.getElementById('new-chat-btn').addEventListener('click', createNewChat);
 
-        // --- SUBSCRIPTION & UPDATE UI ---
+        // --- UI UPDATER ---
         function updateCreditsUI() {
             const model = modelSelect.value;
             const isPro = (model === 'pro');
             
-            let display = '...';
-            
-            // Fallbacks
             const free = (subscriptionData.free_credits !== undefined) ? subscriptionData.free_credits : 10;
             const pro = (subscriptionData.pro_credits !== undefined) ? subscriptionData.pro_credits : 0;
 
             if (isPro) {
-                display = `💎 ${pro}`;
+                creditsDisplay.textContent = `💎 ${pro}`;
             } else {
-                display = `⚡ ${free}/${FREE_LIMIT}`;
+                creditsDisplay.textContent = `⚡ ${free}/${FREE_LIMIT} (+💎${pro})`;
             }
-            creditsDisplay.textContent = display;
         }
 
-        // Listener for Data changes
         function setupSubscriptionListener(uid) {
             onValue(ref(db, `users/${uid}/subscription`), s => {
                 const val = s.val();
                 if (!val) {
-                    // Init default
                     subscriptionData = { free_credits: 10, pro_credits: 0, last_free_reset: 0 };
                     set(ref(db, `users/${uid}/subscription`), subscriptionData);
                 } else {
@@ -549,11 +570,8 @@
             });
         }
         
-        // Listener for Model Change (to switch counter instantly)
         modelSelect.addEventListener('change', updateCreditsUI);
 
-        
-        // Modals logic
         const modelsModal = document.getElementById('models-modal');
         const adminModal = document.getElementById('admin-modal');
         document.getElementById('models-btn').addEventListener('click', () => window.location.hash = '#models');
@@ -577,7 +595,24 @@
             });
         });
 
-        // Admin
+        const tabReqBtn = document.getElementById('tab-requests-btn');
+        const tabMgmtBtn = document.getElementById('tab-management-btn');
+        const tabReqContent = document.getElementById('tab-requests-content');
+        const tabMgmtContent = document.getElementById('tab-management-content');
+
+        if(tabReqBtn && tabMgmtBtn) {
+            tabReqBtn.onclick = () => {
+                tabReqContent.classList.remove('hidden'); tabMgmtContent.classList.add('hidden');
+                tabReqBtn.classList.add('border-b-2', 'border-blue-500', 'bg-white/5', 'text-white'); tabReqBtn.classList.remove('text-gray-400');
+                tabMgmtBtn.classList.remove('border-b-2', 'border-blue-500', 'bg-white/5', 'text-white'); tabMgmtBtn.classList.add('text-gray-400');
+            };
+            tabMgmtBtn.onclick = () => {
+                tabReqContent.classList.add('hidden'); tabMgmtContent.classList.remove('hidden');
+                tabMgmtBtn.classList.add('border-b-2', 'border-blue-500', 'bg-white/5', 'text-white'); tabMgmtBtn.classList.remove('text-gray-400');
+                tabReqBtn.classList.remove('border-b-2', 'border-blue-500', 'bg-white/5', 'text-white'); tabReqBtn.classList.add('text-gray-400');
+            };
+        }
+
         function setupAdminListeners() {
             onValue(ref(db, 'purchaseRequests'), s => {
                 const list = document.getElementById('admin-requests-list');
@@ -599,12 +634,9 @@
         window.adminReviveServer = async () => { await set(ref(db, 'serverStatus'), { isOnline: true, reason: '' }); };
 
         window.confirmReq = async (rid, uid, pack) => { 
-            // Get current credits first to ADD, not overwrite
             const snap = await get(ref(db, `users/${uid}/subscription`));
             const current = snap.val() || { pro_credits: 0 };
             const newTotal = (current.pro_credits || 0) + pack;
-            
-            // Update ONLY pro_credits field
             await update(ref(db, `users/${uid}/subscription`), { pro_credits: newTotal }); 
             await update(ref(db, `purchaseRequests/${rid}`), { status: 'confirmed' }); 
         };
