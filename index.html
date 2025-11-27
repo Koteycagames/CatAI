@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatAI | Dual Economy</title>
+    <title>CatAI | Ultimate Stable</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
@@ -23,6 +23,10 @@
         @keyframes blink { 50% { opacity: 0; } }
         pre { background: #282c34; padding: 1em; border-radius: 8px; overflow-x: auto; margin-top: 10px; }
         .message-content p { margin-bottom: 0.5em; }
+        
+        /* Активная вкладка */
+        .tab-active { border-bottom: 2px solid #3b82f6; color: white; background: rgba(255,255,255,0.05); }
+        .tab-inactive { color: #9ca3af; border-bottom: 2px solid transparent; }
     </style>
 </head>
 <body class="text-gray-100 h-full overflow-hidden selection:bg-pink-500 selection:text-white">
@@ -104,7 +108,7 @@
                     <div class="w-px h-6 bg-white/10"></div>
                     <input type="text" id="chat-input" placeholder="Напиши что-нибудь..." class="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:ring-0 px-4 py-3" autocomplete="off">
                     
-                    <div id="credits-display" class="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20 whitespace-nowrap hidden sm:block">...</div>
+                    <div id="credits-display" class="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20 whitespace-nowrap hidden sm:block">Загрузка...</div>
 
                     <button type="submit" class="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition shadow-lg">➔</button>
                     <div class="relative ml-2">
@@ -124,57 +128,22 @@
         <div class="glass relative w-full max-w-2xl rounded-3xl overflow-hidden transform transition-all">
             <div id="modal-state-default" class="p-8 flex flex-col h-[600px]">
                 <h3 class="text-2xl font-bold text-white mb-1">Магазин CatAI</h3>
-                <p class="text-gray-400 text-sm mb-4">Выберите валюту. Они НЕ совместимы.</p>
-                
+                <p class="text-gray-400 text-sm mb-4">Энергия (для Base) и Кристаллы (для PRO) — разные валюты.</p>
                 <div class="flex-1 grid grid-cols-2 gap-6 overflow-y-auto pr-1">
-                    
                     <div class="space-y-3">
                         <h4 class="text-yellow-400 font-bold text-sm uppercase border-b border-yellow-500/20 pb-2 mb-2">⚡ Энергия (Base/Fast)</h4>
-                        
-                        <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-yellow-500 block">
-                            <input name="limit-selection" type="radio" value="energy-30" class="sr-only">
-                            <span class="block text-lg font-bold text-white">30 ⚡</span>
-                            <span class="text-xs text-gray-400">Для простых моделей</span>
-                        </label>
-                         <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-yellow-500 block">
-                            <input name="limit-selection" type="radio" value="energy-50" class="sr-only">
-                            <span class="block text-lg font-bold text-white">50 ⚡</span>
-                            <span class="text-xs text-gray-400">Для простых моделей</span>
-                        </label>
-                         <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-yellow-500 block">
-                            <input name="limit-selection" type="radio" value="energy-100" class="sr-only">
-                            <span class="block text-lg font-bold text-white">100 ⚡</span>
-                            <span class="text-xs text-gray-400">Хит продаж</span>
-                        </label>
+                        <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-yellow-500 block"><input name="limit-selection" type="radio" value="energy-30" class="sr-only"><span class="block text-lg font-bold text-white">30 ⚡</span><span class="text-xs text-gray-400">Старт</span></label>
+                        <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-yellow-500 block"><input name="limit-selection" type="radio" value="energy-50" class="sr-only"><span class="block text-lg font-bold text-white">50 ⚡</span><span class="text-xs text-gray-400">Оптимум</span></label>
+                        <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-yellow-500 block"><input name="limit-selection" type="radio" value="energy-100" class="sr-only"><span class="block text-lg font-bold text-white">100 ⚡</span><span class="text-xs text-gray-400">Максимум</span></label>
                     </div>
-
                     <div class="space-y-3">
-                        <h4 class="text-purple-400 font-bold text-sm uppercase border-b border-purple-500/20 pb-2 mb-2">💎 Кристаллы (Pro)</h4>
-                        
-                        <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-purple-500 block">
-                            <input name="limit-selection" type="radio" value="pro-10" class="sr-only">
-                            <span class="block text-lg font-bold text-white">10 💎</span>
-                            <span class="text-xs text-gray-400">Попробовать AI</span>
-                        </label>
-                         <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-purple-500 block">
-                            <input name="limit-selection" type="radio" value="pro-30" class="sr-only">
-                            <span class="block text-lg font-bold text-white">30 💎</span>
-                            <span class="text-xs text-gray-400">На пару дней</span>
-                        </label>
-                         <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-purple-500 block">
-                            <input name="limit-selection" type="radio" value="pro-50" class="sr-only">
-                            <span class="block text-lg font-bold text-white">50 💎</span>
-                            <span class="text-xs text-gray-400">Оптимально</span>
-                        </label>
-                         <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-purple-500 block">
-                            <input name="limit-selection" type="radio" value="pro-100" class="sr-only">
-                            <span class="block text-lg font-bold text-white">100 💎</span>
-                            <span class="text-xs text-gray-400">Для профи</span>
-                        </label>
+                        <h4 class="text-purple-400 font-bold text-sm uppercase border-b border-purple-500/20 pb-2 mb-2">💎 Кристаллы (PRO)</h4>
+                        <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-purple-500 block"><input name="limit-selection" type="radio" value="pro-10" class="sr-only"><span class="block text-lg font-bold text-white">10 💎</span><span class="text-xs text-gray-400">Тест</span></label>
+                        <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-purple-500 block"><input name="limit-selection" type="radio" value="pro-30" class="sr-only"><span class="block text-lg font-bold text-white">30 💎</span><span class="text-xs text-gray-400">Стандарт</span></label>
+                        <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-purple-500 block"><input name="limit-selection" type="radio" value="pro-50" class="sr-only"><span class="block text-lg font-bold text-white">50 💎</span><span class="text-xs text-gray-400">Профи</span></label>
+                        <label class="glass glass-hover p-3 rounded-xl cursor-pointer border-l-4 border-purple-500 block"><input name="limit-selection" type="radio" value="pro-100" class="sr-only"><span class="block text-lg font-bold text-white">100 💎</span><span class="text-xs text-gray-400">Элита</span></label>
                     </div>
-
                 </div>
-                
                 <div class="mt-6 flex justify-end space-x-3 pt-4 border-t border-white/5">
                     <button id="close-modal-btn" class="px-6 py-3 rounded-xl text-gray-300 hover:bg-white/10 transition">Закрыть</button>
                     <button id="purchase-btn" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition shadow-lg" disabled>Купить</button>
@@ -188,8 +157,8 @@
         <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" id="admin-modal-backdrop"></div>
         <div class="glass relative w-full max-w-3xl h-[600px] flex flex-col rounded-3xl overflow-hidden">
             <div class="flex border-b border-white/10 bg-black/20">
-                <button id="tab-requests-btn" class="flex-1 py-4 text-sm font-medium text-white border-b-2 border-blue-500 bg-white/5 transition">Запросы</button>
-                <button id="tab-management-btn" class="flex-1 py-4 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition">Сервер</button>
+                <button id="tab-requests-btn" onclick="window.switchAdminTab('requests')" class="flex-1 py-4 text-sm font-medium text-white border-b-2 border-blue-500 bg-white/5 transition tab-active">Запросы</button>
+                <button id="tab-management-btn" onclick="window.switchAdminTab('server')" class="flex-1 py-4 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition tab-inactive">Сервер</button>
             </div>
             <div class="flex-1 overflow-y-auto p-8 relative">
                 <div id="tab-requests-content" class="space-y-4"><h3 class="text-lg font-bold text-white mb-4">Активные запросы</h3><div id="admin-requests-list" class="space-y-3"></div></div>
@@ -231,7 +200,6 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        const pages = document.querySelectorAll('.page');
         const chatHistoryList = document.getElementById('chat-history-list');
         const chatMessages = document.getElementById('chat-messages');
         const typingIndicator = document.getElementById('typing-indicator');
@@ -245,21 +213,35 @@
         let userChatsData = {};
         let currentActiveChatId = null;
         let knowledgeBase = {};
-        // Structure: { free_credits: 10, purchased_energy: 0, pro_credits: 0, last_free_reset: 0 }
         let subscriptionData = { free_credits: 10, purchased_energy: 0, pro_credits: 0, last_free_reset: 0 };
         const FREE_LIMIT = 10;
-        const RESET_PERIOD = 3 * 60 * 60 * 1000; // 3 hours
+        const RESET_PERIOD = 3 * 60 * 60 * 1000;
+
+        // GLOBAL TABS FUNCTION (NO MORE EVENT LISTENER BUGS)
+        window.switchAdminTab = (tab) => {
+            const reqBtn = document.getElementById('tab-requests-btn');
+            const srvBtn = document.getElementById('tab-management-btn');
+            const reqContent = document.getElementById('tab-requests-content');
+            const srvContent = document.getElementById('tab-management-content');
+
+            if (tab === 'requests') {
+                reqContent.classList.remove('hidden'); srvContent.classList.add('hidden');
+                reqBtn.classList.add('tab-active', 'text-white'); reqBtn.classList.remove('text-gray-400', 'tab-inactive');
+                srvBtn.classList.remove('tab-active', 'text-white'); srvBtn.classList.add('text-gray-400', 'tab-inactive');
+            } else {
+                reqContent.classList.add('hidden'); srvContent.classList.remove('hidden');
+                srvBtn.classList.add('tab-active', 'text-white'); srvBtn.classList.remove('text-gray-400', 'tab-inactive');
+                reqBtn.classList.remove('tab-active', 'text-white'); reqBtn.classList.add('text-gray-400', 'tab-inactive');
+            }
+        };
 
         function setupServerStatusListener() {
             onValue(ref(db, 'serverStatus'), (snapshot) => {
                 const status = snapshot.val();
                 if (!status) return; 
-                if (status.isOnline === false) {
-                    if (isAdmin) { offlineScreen.classList.add('hidden'); } 
-                    else {
-                        offlineReasonText.textContent = status.reason || "Ошибка подключения.";
-                        offlineScreen.classList.remove('hidden'); offlineScreen.classList.add('flex');
-                    }
+                if (status.isOnline === false && !isAdmin) {
+                    offlineReasonText.textContent = status.reason || "Ошибка подключения.";
+                    offlineScreen.classList.remove('hidden'); offlineScreen.classList.add('flex');
                 } else { offlineScreen.classList.add('hidden'); offlineScreen.classList.remove('flex'); }
             });
         }
@@ -270,17 +252,9 @@
             if (mode === 'dumb') systemContent += " Отвечай кратко. НЕ ПИШИ КОД. Говори что код только в PRO.";
             else systemContent += " Ты эксперт. Пиши код красиво в Markdown.";
             systemContent += "\nЕсли мат - не отвечай.";
-
-            const requestBody = {
-                model: "llama-3.3-70b-versatile",
-                messages: [{ role: "system", content: systemContent }, { role: "user", content: userMessage }]
-            };
+            const requestBody = { model: "llama-3.3-70b-versatile", messages: [{ role: "system", content: systemContent }, { role: "user", content: userMessage }] };
             try {
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${API_KEY}` },
-                    body: JSON.stringify(requestBody)
-                });
+                const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${API_KEY}` }, body: JSON.stringify(requestBody) });
                 const data = await response.json();
                 if (data.error) return "Ошибка мозга: " + data.error.message;
                 return data.choices[0].message.content;
@@ -331,7 +305,7 @@
 
         function updateView() {
             const hash = window.location.hash || (currentUserId ? '#ai' : '#login');
-            pages.forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
             if (hash === '#ai' && currentUserId) document.querySelector('#ai').classList.remove('hidden');
             else if (hash === '#models') { document.querySelector('#ai').classList.remove('hidden'); document.getElementById('models-modal').classList.remove('hidden'); }
             else if (hash === '#admin' && isAdmin) { document.querySelector('#ai').classList.remove('hidden'); document.getElementById('admin-modal').classList.remove('hidden'); }
@@ -468,49 +442,41 @@
 
             await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'user', content: txt });
             
-            // --- DUAL ECONOMY LOGIC ---
             const useAI = (source === 'ai' || source === 'hybrid');
             let canUseAI = true;
             
             if (useAI) {
                 const now = new Date().getTime();
-                // Fallback defaults
-                let free = (subscriptionData.free_credits !== undefined) ? subscriptionData.free_credits : 10;
-                let purchased = (subscriptionData.purchased_energy !== undefined) ? subscriptionData.purchased_energy : 0;
-                let pro = (subscriptionData.pro_credits !== undefined) ? subscriptionData.pro_credits : 0;
+                let free = subscriptionData.free_credits || 0;
+                let purchased = subscriptionData.purchased_energy || 0;
+                let pro = subscriptionData.pro_credits || 0;
                 let lastReset = subscriptionData.last_free_reset || 0;
 
                 const isProModel = (model === 'pro');
 
                 if (isProModel) {
-                    // PRO USES ONLY GEMS
+                    // PRO ONLY USES GEMS
                     if (pro <= 0) {
                          canUseAI = false;
-                         await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: "💎 Недостаточно кристаллов (Gems). Купите их в магазине для доступа к PRO." });
+                         await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: "💎 Недостаточно кристаллов. Купите в магазине." });
                          return;
                     }
                     await update(ref(db, `users/${currentUserId}/subscription`), { pro_credits: pro - 1 });
-
                 } else {
-                    // BASE/FAST USES FREE -> THEN PURCHASED ENERGY
-                    
-                    // Auto-Refill check
+                    // BASE/FAST: FREE -> PURCHASED
                     if (now - lastReset > RESET_PERIOD) {
                         free = FREE_LIMIT;
                         await update(ref(db, `users/${currentUserId}/subscription`), { free_credits: FREE_LIMIT, last_free_reset: now });
                     }
 
                     if (free > 0) {
-                        // 1. Spend Free
                         await update(ref(db, `users/${currentUserId}/subscription`), { free_credits: free - 1 });
                     } else if (purchased > 0) {
-                        // 2. Spend Purchased Energy
                         await update(ref(db, `users/${currentUserId}/subscription`), { purchased_energy: purchased - 1 });
                     } else {
-                         // 3. Empty
                          canUseAI = false;
                          const waitTime = Math.ceil((RESET_PERIOD - (now - lastReset)) / (1000 * 60));
-                         await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: `⚡ Энергия кончилась. Ждите ${waitTime} мин или купите дополнительную Энергию в магазине.` });
+                         await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: `⚡ Энергия кончилась. Ждите ${waitTime} мин или купите в магазине.` });
                          return;
                     }
                 }
@@ -539,20 +505,16 @@
 
         document.getElementById('new-chat-btn').addEventListener('click', createNewChat);
 
-        // --- UI UPDATE ---
         function updateCreditsUI() {
             const model = modelSelect.value;
             const isPro = (model === 'pro');
-            
-            const free = (subscriptionData.free_credits !== undefined) ? subscriptionData.free_credits : 10;
-            const purchased = (subscriptionData.purchased_energy !== undefined) ? subscriptionData.purchased_energy : 0;
-            const pro = (subscriptionData.pro_credits !== undefined) ? subscriptionData.pro_credits : 0;
+            const free = subscriptionData.free_credits || 0;
+            const purchased = subscriptionData.purchased_energy || 0;
+            const pro = subscriptionData.pro_credits || 0;
 
             if (isPro) {
                 creditsDisplay.textContent = `💎 ${pro}`;
             } else {
-                // Show Free + Purchased
-                const totalEnergy = free + purchased;
                 creditsDisplay.textContent = `⚡ ${free}/${FREE_LIMIT} (+${purchased})`;
             }
         }
@@ -569,9 +531,9 @@
                 updateCreditsUI();
             });
         }
-        
         modelSelect.addEventListener('change', updateCreditsUI);
 
+        // --- MODALS & BUY ---
         const modelsModal = document.getElementById('models-modal');
         const adminModal = document.getElementById('admin-modal');
         document.getElementById('models-btn').addEventListener('click', () => window.location.hash = '#models');
@@ -580,19 +542,15 @@
         document.getElementById('close-admin-modal-btn').addEventListener('click', () => { window.location.hash = '#ai'; adminModal.classList.add('hidden'); });
 
         document.querySelectorAll('input[name="limit-selection"]').forEach(r => r.addEventListener('change', () => { 
-            const btn = document.getElementById('purchase-btn'); btn.disabled=false; btn.textContent='Купить'; 
+            document.getElementById('purchase-btn').disabled=false; 
         }));
 
-        // BUY HANDLER
         document.getElementById('purchase-btn').addEventListener('click', async () => {
             const selection = document.querySelector('input[name="limit-selection"]:checked').value;
-            // Parse "type-amount" (e.g., "energy-50" or "pro-100")
             const [type, amountStr] = selection.split('-');
             const amount = parseInt(amountStr);
-
             const reqRef = push(ref(db, 'purchaseRequests'));
             await set(reqRef, { userId: currentUserId, userEmail: auth.currentUser.email, type: type, amount: amount, status: 'pending', timestamp: serverTimestamp() });
-            
             document.getElementById('modal-state-waiting').classList.remove('hidden');
             document.getElementById('modal-state-default').classList.add('hidden');
             onValue(reqRef, s => {
@@ -601,7 +559,6 @@
             });
         });
 
-        // ADMIN HANDLER
         function setupAdminListeners() {
             onValue(ref(db, 'purchaseRequests'), s => {
                 const list = document.getElementById('admin-requests-list');
@@ -611,11 +568,8 @@
                     if(r.status !== 'pending') return;
                     const div = document.createElement('div');
                     div.className = 'glass p-4 rounded-xl flex justify-between items-center border-white/10';
-                    
-                    // Beautify display
                     const itemLabel = r.type === 'pro' ? `💎 ${r.amount} Gems` : `⚡ ${r.amount} Energy`;
-                    
-                    div.innerHTML = `<div><p class="font-bold text-white">${r.userEmail}</p><p class="text-xs text-blue-400">Запрос: ${itemLabel}</p></div>
+                    div.innerHTML = `<div><p class="font-bold text-white">${r.userEmail}</p><p class="text-xs text-blue-400">${itemLabel}</p></div>
                         <div class="space-x-2"><button class="bg-green-600 px-3 py-1 rounded" onclick="window.confirmReq('${rid}','${r.userId}','${r.type}',${r.amount})">✔</button><button class="bg-red-600 px-3 py-1 rounded" onclick="window.rejectReq('${rid}')">✖</button></div>`;
                     list.appendChild(div);
                 });
@@ -626,19 +580,11 @@
         window.adminDisconnectServer = async () => { if(confirm('Block?')) await set(ref(db, 'serverStatus'), { isOnline: false, reason: 'Connection Error' }); };
         window.adminReviveServer = async () => { await set(ref(db, 'serverStatus'), { isOnline: true, reason: '' }); };
 
-        // ADMIN CONFIRM LOGIC
         window.confirmReq = async (rid, uid, type, amount) => { 
             const snap = await get(ref(db, `users/${uid}/subscription`));
             const current = snap.val() || {};
-            
-            if (type === 'pro') {
-                const newTotal = (current.pro_credits || 0) + amount;
-                await update(ref(db, `users/${uid}/subscription`), { pro_credits: newTotal });
-            } else {
-                const newTotal = (current.purchased_energy || 0) + amount;
-                await update(ref(db, `users/${uid}/subscription`), { purchased_energy: newTotal });
-            }
-            
+            if (type === 'pro') await update(ref(db, `users/${uid}/subscription`), { pro_credits: (current.pro_credits || 0) + amount });
+            else await update(ref(db, `users/${uid}/subscription`), { purchased_energy: (current.purchased_energy || 0) + amount });
             await update(ref(db, `purchaseRequests/${rid}`), { status: 'confirmed' }); 
         };
         window.rejectReq = async (rid) => await update(ref(db, `purchaseRequests/${rid}`), { status: 'canceled' });
