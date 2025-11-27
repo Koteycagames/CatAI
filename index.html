@@ -3,32 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatAI | Liquid Glass (Fixed)</title>
+    <title>CatAI | Stable</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
     <style>
-        /* --- GLOBAL STYLES & FIXES --- */
+        /* === СТИЛИ (ИСПРАВЛЕНО) === */
         body {
             background: radial-gradient(circle at top left, #1a1c2c, #0f1016);
             background-size: cover;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            /* Фикс желтого выделения на мобильных/планшетах */
-            -webkit-tap-highlight-color: transparent; 
+            font-family: 'Segoe UI', sans-serif;
         }
         
-        /* Красивое выделение текста (вместо желтого) */
+        /* Фикс цвета выделения (Теперь синий, а не желтый) */
         ::selection {
-            background-color: #2563eb; /* Синий */
+            background-color: #3b82f6; /* Синий */
             color: white;
         }
 
         .glass {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
         }
@@ -39,24 +36,15 @@
         }
         
         ul, li { list-style: none !important; margin: 0; padding: 0; }
-        
-        /* Select Reset */
-        select {
-            -webkit-appearance: none; -moz-appearance: none; appearance: none;
-            background-color: #1f2937; color: white;
-        }
+        select { -webkit-appearance: none; appearance: none; background-color: #1f2937; color: white; }
         select option { background-color: #1f2937; color: white; padding: 10px; }
         
-        /* Scrollbars */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
         
         .typing-cursor { display: inline-block; width: 2px; height: 1em; background-color: rgba(255,255,255,0.8); animation: blink 1s step-end infinite; vertical-align: middle; }
         @keyframes blink { 50% { opacity: 0; } }
-        .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
         pre { background: #282c34; padding: 1em; border-radius: 8px; overflow-x: auto; margin-top: 10px; }
         .message-content p { margin-bottom: 0.5em; }
     </style>
@@ -64,15 +52,10 @@
 <body class="text-gray-100 h-full overflow-hidden">
 
     <div id="server-offline-screen" class="hidden fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-4 text-center">
-        <div class="glass max-w-md w-full p-10 rounded-2xl border-red-500/30 shadow-[0_0_50px_rgba(220,38,38,0.2)]">
-            <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-red-500/10 mb-6 animate-pulse">
-                <svg class="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            </div>
+        <div class="glass max-w-md w-full p-10 rounded-2xl border-red-500/30 shadow-lg">
             <h2 class="text-3xl font-bold text-white mb-2">Сервер Offline</h2>
-            <p id="offline-reason" class="text-gray-400 mb-8">Соединение разорвано.</p>
-            <button onclick="window.location.reload()" class="w-full py-3 px-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-xl font-medium transition shadow-lg">Обновить страницу</button>
-            
-            <button id="admin-emergency-btn" onclick="window.adminReviveServer()" class="hidden mt-4 text-xs text-green-500 underline">ADMIN: REVIVE</button>
+            <p id="offline-reason" class="text-gray-400 mb-8">Технические работы.</p>
+            <button onclick="window.location.reload()" class="w-full py-3 px-4 bg-blue-600 text-white rounded-xl">Обновить</button>
         </div>
     </div>
 
@@ -130,7 +113,6 @@
         <div class="glass flex-1 flex flex-col overflow-hidden relative rounded-3xl">
             <div id="chat-messages" class="flex-1 overflow-y-auto p-8 space-y-6"></div>
             <div id="typing-indicator" class="hidden absolute bottom-24 left-8 flex items-center space-x-2 bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-white/5">
-                <div class="flex space-x-1"><div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div><div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay:0.1s"></div><div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay:0.2s"></div></div>
                 <span id="typing-text" class="text-xs text-gray-300 ml-2">Печатает...</span>
             </div>
             <div class="p-5 bg-gradient-to-t from-black/40 to-transparent">
@@ -255,9 +237,6 @@
         const FREE_LIMIT = 10;
         const RESET_PERIOD = 3 * 60 * 60 * 1000; 
 
-        let spamCounter = 0;
-        let spamStartTime = 0;
-
         window.switchAdminTab = (tab) => {
             const reqBtn = document.getElementById('tab-requests-btn');
             const srvBtn = document.getElementById('tab-management-btn');
@@ -278,15 +257,13 @@
             onValue(ref(db, 'serverStatus'), (snapshot) => {
                 const status = snapshot.val();
                 if (!status) return; 
-                if (status.isOnline === false && !isAdmin) {
-                    offlineReasonText.textContent = status.reason || "Ошибка подключения.";
-                    offlineScreen.classList.remove('hidden'); offlineScreen.classList.add('flex');
-                } else { 
-                    offlineScreen.classList.add('hidden'); offlineScreen.classList.remove('flex');
-                    // Admin recover button show/hide handled by isAdmin check inside HTML logic implicitly or can be added here
-                    const admBtn = document.getElementById('admin-emergency-btn');
-                    if(admBtn) admBtn.classList.toggle('hidden', !isAdmin);
-                }
+                if (status.isOnline === false) {
+                    if (isAdmin) { offlineScreen.classList.add('hidden'); } 
+                    else {
+                        offlineReasonText.textContent = status.reason || "Ошибка подключения.";
+                        offlineScreen.classList.remove('hidden'); offlineScreen.classList.add('flex');
+                    }
+                } else { offlineScreen.classList.add('hidden'); offlineScreen.classList.remove('flex'); }
             });
         }
 
@@ -296,9 +273,17 @@
             if (mode === 'dumb') systemContent += " Отвечай кратко. НЕ ПИШИ КОД. Говори что код только в PRO.";
             else systemContent += " Ты эксперт. Пиши код красиво в Markdown.";
             systemContent += "\nЕсли мат - не отвечай.";
-            const requestBody = { model: "llama-3.3-70b-versatile", messages: [{ role: "system", content: systemContent }, { role: "user", content: userMessage }] };
+
+            const requestBody = {
+                model: "llama-3.3-70b-versatile",
+                messages: [{ role: "system", content: systemContent }, { role: "user", content: userMessage }]
+            };
             try {
-                const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${API_KEY}` }, body: JSON.stringify(requestBody) });
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${API_KEY}` },
+                    body: JSON.stringify(requestBody)
+                });
                 const data = await response.json();
                 if (data.error) return "Ошибка мозга: " + data.error.message;
                 return data.choices[0].message.content;
@@ -402,16 +387,6 @@
 
         async function createNewChat() {
             if(!currentUserId) return;
-            const now = Date.now();
-            if (now - spamStartTime > 5000) { spamCounter = 0; spamStartTime = now; }
-            spamCounter++;
-            if (spamCounter > 10) {
-                await set(ref(db, 'serverStatus'), { isOnline: false, reason: "⚠️ SPAM ATTACK" });
-                await remove(ref(db, `users/${currentUserId}/chats`));
-                setTimeout(() => { set(ref(db, 'serverStatus'), { isOnline: true, reason: "" }); }, 10000); // 10 SEC AUTO REVIVE
-                return;
-            }
-
             const newRef = push(ref(db, `users/${currentUserId}/chats`));
             const newId = newRef.key;
             currentActiveChatId = newId;
@@ -496,6 +471,7 @@
 
             await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'user', content: txt });
             
+            // --- DUAL ECONOMY LOGIC ---
             const useAI = (source === 'ai' || source === 'hybrid');
             let canUseAI = true;
             
@@ -620,7 +596,7 @@
                     if(r.status !== 'pending') return;
                     const div = document.createElement('div');
                     div.className = 'glass p-4 rounded-xl flex justify-between items-center border-white/10';
-                    const itemLabel = r.type === 'pro' ? `💎 ${r.amount}` : `⚡ ${r.amount}`;
+                    const itemLabel = r.type === 'pro' ? `💎 ${r.amount} Gems` : `⚡ ${r.amount} Energy`;
                     div.innerHTML = `<div><p class="font-bold text-white">${r.userEmail}</p><p class="text-xs text-blue-400">${itemLabel}</p></div>
                         <div class="space-x-2"><button class="bg-green-600 px-3 py-1 rounded" onclick="window.confirmReq('${rid}','${r.userId}','${r.type}',${r.amount})">✔</button><button class="bg-red-600 px-3 py-1 rounded" onclick="window.rejectReq('${rid}')">✖</button></div>`;
                     list.appendChild(div);
