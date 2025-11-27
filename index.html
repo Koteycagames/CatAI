@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatAI | Liquid Glass (Final Build)</title>
+    <title>CatAI | Ultimate Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
     <style>
         /* Global Styles */
         body {
@@ -32,8 +36,11 @@
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
         .typing-cursor { display: inline-block; width: 2px; height: 1em; background-color: rgba(255,255,255,0.8); animation: blink 1s step-end infinite; vertical-align: middle; }
         @keyframes blink { 50% { opacity: 0; } }
-        .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Стили для кода */
+        pre { background: #282c34; padding: 1em; border-radius: 8px; overflow-x: auto; margin-top: 10px; }
+        code { font-family: 'Courier New', Courier, monospace; font-size: 0.9em; }
+        .message-content p { margin-bottom: 0.5em; }
     </style>
 </head>
 <body class="text-gray-100 h-full overflow-hidden selection:bg-pink-500 selection:text-white">
@@ -75,20 +82,23 @@
 
     <section id="ai" class="page hidden h-full flex p-4 gap-4">
         <div class="glass w-72 rounded-3xl flex flex-col overflow-hidden flex-shrink-0">
-            <div class="p-5 border-b border-white/5">
-                <button id="new-chat-btn" class="glass glass-hover w-full px-4 py-3 text-sm font-medium text-white rounded-xl flex items-center justify-between transition duration-300">
-                    Новый чат <svg class="w-5 h-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            <div class="p-5 border-b border-white/5 flex justify-between items-center">
+                <button id="new-chat-btn" class="glass glass-hover flex-1 px-4 py-3 text-sm font-medium text-white rounded-xl flex items-center justify-center transition">
+                    <span class="mr-2">+</span> Чат
+                </button>
+                <button id="clear-chat-btn" class="ml-2 p-3 glass glass-hover text-red-400 rounded-xl" title="Очистить этот чат">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 </button>
             </div>
             <ul id="chat-history-list" class="flex-1 overflow-y-auto space-y-2 p-3 block"></ul>
             <div class="p-4 border-t border-white/5 space-y-2">
-                 <a href="#models" id="models-btn" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition duration-200">
-                    <svg class="h-5 w-5 mr-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg> Модели
+                 <a href="#models" id="models-btn" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition">
+                    <svg class="h-5 w-5 mr-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg> Магазин
                 </a>
-                 <a href="#admin" id="admin-panel-btn" class="hidden flex items-center px-4 py-3 text-sm font-medium rounded-xl text-yellow-400 hover:text-yellow-200 hover:bg-yellow-500/10 transition duration-200">
+                 <a href="#admin" id="admin-panel-btn" class="hidden flex items-center px-4 py-3 text-sm font-medium rounded-xl text-yellow-400 hover:text-yellow-200 hover:bg-yellow-500/10 transition">
                       <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg> Админ
                  </a>
-                 <a href="#login" id="logout-btn" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-300 hover:text-red-300 hover:bg-red-500/10 transition duration-200">
+                 <a href="#login" id="logout-btn" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-300 hover:text-red-300 hover:bg-red-500/10 transition">
                       <svg class="h-5 w-5 mr-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Выйти
                  </a>
             </div>
@@ -103,24 +113,27 @@
             <div class="p-5 bg-gradient-to-t from-black/40 to-transparent">
                 <form id="chat-form" class="flex items-center space-x-3 max-w-5xl mx-auto bg-black/30 p-2 rounded-2xl border border-white/10 backdrop-blur-md">
                     <div class="relative group">
-                        <select id="model-select" class="w-40 bg-transparent border-none text-gray-300 text-sm rounded-xl focus:ring-0 cursor-pointer hover:text-white transition px-4 py-3">
-                            <option value="base" class="bg-gray-900">CatAI Base</option>
-                            <option value="fast" class="bg-gray-900">CatAI Fast</option>
-                            <option value="pro" class="bg-gray-900">CatAI PRO (AI)</option>
+                        <select id="model-select" class="w-32 bg-transparent border-none text-gray-300 text-sm rounded-xl focus:ring-0 cursor-pointer hover:text-white transition px-2 py-3">
+                            <option value="base" class="bg-gray-900">Base</option>
+                            <option value="fast" class="bg-gray-900">Fast</option>
+                            <option value="pro" class="bg-gray-900">PRO</option>
                         </select>
                     </div>
                     <div class="w-px h-6 bg-white/10"></div>
                     <input type="text" id="chat-input" placeholder="Напиши что-нибудь..." class="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:ring-0 px-4 py-3" autocomplete="off">
-                    <button type="submit" class="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition shadow-lg">➔</button>
                     
+                    <div id="credits-display" class="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20 whitespace-nowrap hidden sm:block">
+                        ⚡ --
+                    </div>
+
+                    <button type="submit" class="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition shadow-lg">➔</button>
                     <div class="relative ml-2">
                         <select id="source-select" class="w-24 bg-blue-600/20 border border-blue-500/30 text-blue-200 text-xs font-bold rounded-xl focus:ring-0 cursor-pointer hover:bg-blue-600/40 transition px-2 py-3 uppercase tracking-wider">
                             <option value="json">JSON</option>
                             <option value="ai">AI</option>
-                            <option value="hybrid" selected>JSON+AI</option>
+                            <option value="hybrid" selected>AUTO</option>
                         </select>
                     </div>
-
                 </form>
             </div>
         </div>
@@ -130,24 +143,20 @@
         <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" id="modal-backdrop"></div>
         <div class="glass relative w-full max-w-lg rounded-3xl overflow-hidden transform transition-all">
             <div id="modal-state-default" class="p-8">
-                <h3 class="text-2xl font-bold text-white mb-2">Выбор модели</h3>
-                <div class="space-y-4 mt-6">
-                    <label class="glass glass-hover flex items-center p-4 rounded-xl cursor-pointer transition duration-300"><input name="model-selection" type="radio" value="base" class="mr-3"><span class="block font-medium text-white">Base (JSON)</span></label>
-                    <label class="glass glass-hover flex items-center p-4 rounded-xl cursor-pointer transition duration-300"><input name="model-selection" type="radio" value="fast" class="mr-3"><span class="block font-medium text-white">Fast (JSON)</span></label>
-                    <label class="glass glass-hover flex items-center p-4 rounded-xl cursor-pointer transition duration-300 border-purple-500/30"><input name="model-selection" type="radio" value="pro" class="mr-3"><span class="block font-medium text-white">PRO 🚀 (Llama 3.3)</span></label>
-                </div>
-                <div id="limit-selection-fieldset" class="hidden mt-6 pt-6 border-t border-white/10 animate-fade-in">
-                    <div class="grid grid-cols-3 gap-3">
-                        <label class="glass glass-hover p-3 rounded-xl text-center cursor-pointer"><input name="limit-selection" type="radio" value="1k" class="sr-only"><span class="text-sm font-bold">1K</span></label>
-                        <label class="glass glass-hover p-3 rounded-xl text-center cursor-pointer"><input name="limit-selection" type="radio" value="5k" class="sr-only"><span class="text-sm font-bold">5K</span></label>
-                        <label class="glass glass-hover p-3 rounded-xl text-center cursor-pointer"><input name="limit-selection" type="radio" value="10k" class="sr-only"><span class="text-sm font-bold">10K</span></label>
-                    </div>
+                <h3 class="text-2xl font-bold text-white mb-2">Магазин CatAI</h3>
+                <p class="text-gray-400 text-sm mb-4">Покупайте пакеты сообщений для использования AI. JSON работает бесплатно.</p>
+                
+                <div id="limit-selection-fieldset" class="grid grid-cols-3 gap-3 mt-6">
+                    <label class="glass glass-hover p-4 rounded-xl text-center cursor-pointer"><input name="limit-selection" type="radio" value="100" class="sr-only"><span class="block text-xl font-bold text-white">100</span><span class="text-xs text-gray-400">сообщений</span></label>
+                    <label class="glass glass-hover p-4 rounded-xl text-center cursor-pointer"><input name="limit-selection" type="radio" value="300" class="sr-only"><span class="block text-xl font-bold text-yellow-400">300</span><span class="text-xs text-gray-400">сообщений</span></label>
+                    <label class="glass glass-hover p-4 rounded-xl text-center cursor-pointer"><input name="limit-selection" type="radio" value="500" class="sr-only"><span class="block text-xl font-bold text-purple-400">500</span><span class="text-xs text-gray-400">сообщений</span></label>
                 </div>
                 <div class="mt-8 flex justify-end space-x-3">
                     <button id="close-modal-btn" class="px-6 py-3 rounded-xl text-gray-300 hover:bg-white/10 transition">Закрыть</button>
-                    <button id="purchase-btn" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition shadow-lg" disabled>Выбрать</button>
+                    <button id="purchase-btn" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition shadow-lg" disabled>Купить</button>
                 </div>
             </div>
+            <div id="modal-state-waiting" class="hidden p-12 text-center"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div><h3 class="text-lg text-white">Ожидание подтверждения...</h3></div>
         </div>
     </div>
 
@@ -180,7 +189,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-        import { getDatabase, ref, onValue, push, set, serverTimestamp, update, off, get } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+        import { getDatabase, ref, onValue, push, set, serverTimestamp, update, off, get, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
 
         const API_KEY = "gsk_cOdfx6XLeTHQbSsd32qCW" + "Gdyb3FYDnTmtayoP131UKN7zwEeqG3K"; 
 
@@ -204,14 +213,17 @@
         const typingIndicator = document.getElementById('typing-indicator');
         const offlineScreen = document.getElementById('server-offline-screen');
         const offlineReasonText = document.getElementById('offline-reason');
+        const creditsDisplay = document.getElementById('credits-display');
         
         let currentUserId = null;
         let isAdmin = false;
         let userChatsData = {};
         let currentActiveChatId = null;
         let knowledgeBase = {};
-        let subscriptionStatus = { status: 'none' };
-        const thinkingPhrases = ["Подключение...", "Анализ...", "Генерация..."];
+        // Структура подписки: { type: 'free'|'pro', ai_credits: 10, last_reset: timestamp }
+        let subscriptionData = { type: 'free', ai_credits: 10, last_reset: 0 };
+        const FREE_LIMIT = 10;
+        const RESET_PERIOD = 3 * 60 * 60 * 1000; // 3 часа
 
         function setupServerStatusListener() {
             onValue(ref(db, 'serverStatus'), (snapshot) => {
@@ -227,25 +239,16 @@
             });
         }
 
-        // --- AI API (WITH CENSORSHIP & DUMB MODE) ---
         async function askAI(userMessage, mode) {
             const url = "https://api.groq.com/openai/v1/chat/completions";
-            
-            let systemContent = "Ты — CatAI, умный помощник. Отвечай на русском.";
-            
-            if (mode === 'dumb') {
-                systemContent = "Ты — простая, ограниченная версия бота CatAI. 1. Отвечай МАКСИМАЛЬНО КРАТКО. 2. СТРОГО ЗАПРЕЩЕНО писать код. Если просят код, отвечай: 'Для кода нужна подписка PRO'.";
-            } else {
-                systemContent = "Ты — CatAI PRO, гениальный эксперт. Отвечай подробно, пиши код, решай задачи.";
-            }
-            systemContent += "\nВАЖНО: Если сообщение содержит мат/оскорбления, отвечай ТОЛЬКО: 'Я не могу ответить на ваше сообщение из-за содержания некорректных выражений'.";
+            let systemContent = "Ты — CatAI. Отвечай на русском.";
+            if (mode === 'dumb') systemContent += " Отвечай кратко. НЕ ПИШИ КОД.";
+            else systemContent += " Ты эксперт. Пиши код красиво в Markdown.";
+            systemContent += "\nЕсли мат - не отвечай.";
 
             const requestBody = {
                 model: "llama-3.3-70b-versatile",
-                messages: [
-                    { role: "system", content: systemContent },
-                    { role: "user", content: userMessage }
-                ]
+                messages: [{ role: "system", content: systemContent }, { role: "user", content: userMessage }]
             };
             try {
                 const response = await fetch(url, {
@@ -256,10 +259,9 @@
                 const data = await response.json();
                 if (data.error) return "Ошибка мозга: " + data.error.message;
                 return data.choices[0].message.content;
-            } catch (e) { return "Ошибка сети. Сервер не отвечает."; }
+            } catch (e) { return "Ошибка сети."; }
         }
 
-        // --- SEARCH ---
         const ACTION_WORDS = new Set(['как', 'сделать', 'приготовить', 'сварить', 'пожарить', 'рецепт', 'что', 'такое', 'зачем', 'почему', 'какой', 'при', 'на', 'в', 'с']);
         function cleanString(str) { return str.toLowerCase().trim().replace(/[\?\!\.\,\(\)\-\:]/g, ''); }
         function levenshtein(a, b) {
@@ -320,7 +322,7 @@
                 document.getElementById('admin-panel-btn').classList.toggle('hidden', !isAdmin);
                 await loadKnowledgeBase();
                 setupChatListeners(user.uid);
-                setupSubscriptionListener(user.uid);
+                setupSubscriptionListener(user.uid); // Credits logic here
                 setupServerStatusListener();
                 if(isAdmin) setupAdminListeners();
                 if(!window.location.hash || window.location.hash === '#login') window.location.hash = '#ai';
@@ -396,31 +398,48 @@
             const isUser = role === 'user';
             const div = document.createElement('div');
             div.className = `flex items-start space-x-3 mb-6 fade-in ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`;
+            
+            // Marked Parse (Markdown to HTML)
+            const parsedContent = isUser ? content : marked.parse(content);
+            
             div.innerHTML = `
                 <div class="flex-shrink-0 w-10 h-10 rounded-full ${isUser ? 'bg-gradient-to-br from-blue-500 to-purple-500' : 'bg-white/10'} flex items-center justify-center text-white text-sm font-bold shadow-lg border border-white/10">${isUser?'U':'AI'}</div>
-                <div class="max-w-[80%] min-w-[100px]">
-                    <div class="p-4 rounded-2xl ${isUser ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-tr-sm shadow-blue-500/20' : 'glass text-gray-100 rounded-tl-sm'} text-sm leading-relaxed whitespace-pre-wrap break-words shadow-md border border-white/5 message-content">${content}</div>
+                <div class="max-w-[85%] min-w-[100px]">
+                    <div class="p-4 rounded-2xl ${isUser ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-tr-sm shadow-blue-500/20' : 'glass text-gray-100 rounded-tl-sm'} text-sm leading-relaxed break-words shadow-md border border-white/5 message-content">${parsedContent}</div>
+                    ${!isUser ? '<button class="text-xs text-gray-500 mt-1 hover:text-white ml-1" onclick="speakText(this)">🔊 Прочитать</button>' : ''}
                 </div>`;
             chatMessages.appendChild(div);
+            
+            // Highlight code blocks
+            if(!isUser) div.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
+            
             return div;
         }
 
+        // VOICE FUNCTION
+        window.speakText = (btn) => {
+            const text = btn.parentElement.querySelector('.message-content').innerText;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ru-RU';
+            window.speechSynthesis.speak(utterance);
+        };
+
+        // CLEAR CHAT
+        document.getElementById('clear-chat-btn').addEventListener('click', async () => {
+            if(!currentActiveChatId) return;
+            if(confirm('Удалить переписку?')) {
+                await remove(ref(db, `users/${currentUserId}/chats/${currentActiveChatId}/messages`));
+                // Re-add welcome message
+                push(ref(db, `users/${currentUserId}/chats/${currentActiveChatId}/messages`), {role: 'ai', content: 'Чат очищен. Привет!'});
+            }
+        });
+
         function typeWriter(element, text, speed) {
-            return new Promise(resolve => {
-                let i = 0; element.innerHTML = '<span class="typing-cursor"></span>';
-                function type() {
-                    if (i < text.length) {
-                        const char = text.charAt(i);
-                        let currentHTML = element.innerHTML.replace('<span class="typing-cursor"></span>', '');
-                        if (char === '<') { let tag = ''; while (text.charAt(i) !== '>' && i < text.length) { tag += text.charAt(i); i++; } tag += '>'; i++; currentHTML += tag; } 
-                        else { currentHTML += char; i++; }
-                        element.innerHTML = currentHTML + '<span class="typing-cursor"></span>';
-                        chatMessages.scrollTop = chatMessages.scrollHeight;
-                        setTimeout(type, speed);
-                    } else { element.innerHTML = element.innerHTML.replace('<span class="typing-cursor"></span>', ''); resolve(); }
-                }
-                type();
-            });
+            // Simple typewriter for plain text, then swap to Markdown
+            // To avoid breaking HTML tags during animation, we just fade in the markdown for complex answers
+            // or type simple text. For simplicity here: we inject HTML directly.
+            element.innerHTML = text; // Direct inject for markdown to work immediately
+            return Promise.resolve();
         }
 
         document.getElementById('chat-form').addEventListener('submit', async (e) => {
@@ -431,74 +450,91 @@
             
             const cid = currentActiveChatId;
             const model = document.getElementById('model-select').value;
-            const source = document.getElementById('source-select').value; // GET SOURCE
+            const source = document.getElementById('source-select').value;
             document.getElementById('chat-input').value = '';
 
             await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'user', content: txt });
-            const msgs = userChatsData[cid]?.messages || {};
-            if (Object.keys(msgs).length <= 1) update(ref(db, `users/${currentUserId}/chats/${cid}`), { title: txt.substring(0,25) });
-
-            let thinkingTime = (model === 'fast') ? 500 : ((model === 'pro') ? 1000 : 1500);
-            let typingSpeed = (model === 'fast') ? 10 : ((model === 'pro') ? 20 : 30);
             
-            typingIndicator.classList.remove('hidden');
-            const typingText = document.getElementById('typing-text');
-            typingText.textContent = "CatAI печатает...";
-
-            if (model === 'pro') {
-                let step = 0;
-                const interval = setInterval(() => { typingText.textContent = thinkingPhrases[step++ % thinkingPhrases.length]; }, 800);
-                setTimeout(() => { clearInterval(interval); finalize(); }, thinkingTime);
-            } else { setTimeout(finalize, thinkingTime); }
-
-            async function finalize() {
-                let text = '';
-                let prefix = model === 'base' ? '(Base): ' : (model === 'fast' ? '(Fast): ' : `(AI): `);
-                let aiMode = (model === 'pro') ? 'smart' : 'dumb';
+            // --- LIMITS LOGIC ---
+            const useAI = (source === 'ai' || source === 'hybrid'); // If we MIGHT use AI
+            let canUseAI = true;
+            
+            if (useAI) {
+                // Check limits
+                const now = new Date().getTime();
+                let credits = subscriptionData.ai_credits;
                 
-                if (model === 'pro' && subscriptionStatus.status !== 'active') {
-                     text = 'Ошибка: Нужна PRO подписка.';
-                } else {
-                    // LOGIC: SOURCE SELECT
-                    if (source === 'json') {
-                        const local = findBestMatch(txt, knowledgeBase);
-                        text = local ? (prefix + local) : (prefix + "Я не понял вопрос (В базе нет).");
-                    } else if (source === 'ai') {
-                        document.getElementById('typing-text').textContent = "Генерация AI...";
-                        const ai = await askAI(txt, aiMode);
-                        text = prefix + ai;
-                    } else {
-                        // HYBRID
-                        const local = findBestMatch(txt, knowledgeBase);
-                        if (local) text = prefix + local;
-                        else {
-                            document.getElementById('typing-text').textContent = "Генерация AI...";
-                            const ai = await askAI(txt, aiMode);
-                            text = prefix + ai;
-                        }
+                if (subscriptionData.type === 'free') {
+                    // Free reset logic
+                    if (now - subscriptionData.last_reset > RESET_PERIOD) {
+                        credits = FREE_LIMIT;
+                        await update(ref(db, `users/${currentUserId}/subscription`), { ai_credits: FREE_LIMIT, last_reset: now });
                     }
                 }
 
-                typingIndicator.classList.add('hidden');
-                const tempDiv = appendMessageToUI('ai', '');
-                const contentDiv = tempDiv.querySelector('.message-content');
-                if (text.length > 300) typingSpeed = 5;
-                await typeWriter(contentDiv, text, typingSpeed);
-                await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: text });
+                if (credits <= 0) {
+                    canUseAI = false;
+                    const msg = subscriptionData.type === 'free' ? "Лимит исчерпан. Ждите 3 часа или купите PRO." : "Купленные сообщения закончились.";
+                    await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: msg });
+                    return;
+                }
+                
+                // Deduct credit (optimistic)
+                await update(ref(db, `users/${currentUserId}/subscription`), { ai_credits: credits - 1 });
             }
+
+            typingIndicator.classList.remove('hidden');
+            const aiMode = (model === 'pro') ? 'smart' : 'dumb';
+            
+            let text = '';
+            
+            if (source === 'json') {
+                const local = findBestMatch(txt, knowledgeBase);
+                text = local || "В базе нет ответа.";
+            } else if (source === 'ai') {
+                 if(canUseAI) text = await askAI(txt, aiMode);
+            } else {
+                // Hybrid
+                const local = findBestMatch(txt, knowledgeBase);
+                if (local) text = local;
+                else if (canUseAI) text = await askAI(txt, aiMode);
+                else text = "Лимит исчерпан, а в базе ответа нет.";
+            }
+
+            typingIndicator.classList.add('hidden');
+            // Convert to markdown for display
+            const parsedHTML = marked.parse(text);
+            const tempDiv = appendMessageToUI('ai', text); // Pass raw text to parse inside
+            
+            await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: text });
         });
 
         document.getElementById('new-chat-btn').addEventListener('click', createNewChat);
 
+        // --- SUBSCRIPTION & CREDITS ---
         function setupSubscriptionListener(uid) {
             onValue(ref(db, `users/${uid}/subscription`), s => {
-                subscriptionStatus = s.val() || { status: 'none' };
+                subscriptionData = s.val() || { type: 'free', ai_credits: 10, last_reset: 0 };
+                
+                // Update UI
+                let displaytext = '';
+                if (subscriptionData.type === 'free') {
+                     displaytext = `⚡ ${subscriptionData.ai_credits}/${FREE_LIMIT}`;
+                     // Check reset visually
+                     const now = new Date().getTime();
+                     if (now - subscriptionData.last_reset > RESET_PERIOD && subscriptionData.ai_credits < 10) displaytext = `⚡ 10/10 (Ready)`;
+                } else {
+                     displaytext = `💎 ${subscriptionData.ai_credits}`;
+                }
+                creditsDisplay.textContent = displaytext;
+
+                // Unlock Pro selector visual
                 const opt = document.querySelector('option[value="pro"]');
-                if(subscriptionStatus.status === 'active') { opt.disabled=false; opt.textContent=`CatAI PRO (AI)`; }
-                else { opt.disabled=true; opt.textContent='CatAI PRO (Locked)'; }
+                // We don't disable pro anymore based on type, just based on credits really, but let's keep it open
             });
         }
         
+        // Modals logic
         const modelsModal = document.getElementById('models-modal');
         const adminModal = document.getElementById('admin-modal');
         document.getElementById('models-btn').addEventListener('click', () => window.location.hash = '#models');
@@ -506,53 +542,26 @@
         document.getElementById('close-modal-btn').addEventListener('click', () => { window.location.hash = '#ai'; modelsModal.classList.add('hidden'); });
         document.getElementById('close-admin-modal-btn').addEventListener('click', () => { window.location.hash = '#ai'; adminModal.classList.add('hidden'); });
 
-        document.querySelectorAll('input[name="model-selection"]').forEach(r => r.addEventListener('change', e => {
-            const fs = document.getElementById('limit-selection-fieldset');
-            if(fs) fs.classList.toggle('hidden', e.target.value !== 'pro');
-            const btn = document.getElementById('purchase-btn');
-            if(btn && e.target.value !== 'pro') { btn.disabled=true; btn.textContent='Бесплатно'; }
-        }));
-        
+        // Purchase logic (updated for packs)
         document.querySelectorAll('input[name="limit-selection"]').forEach(r => r.addEventListener('change', () => { 
-            const btn = document.getElementById('purchase-btn'); 
-            if(btn) { btn.disabled=false; btn.textContent='Оплатить'; }
+            const btn = document.getElementById('purchase-btn'); btn.disabled=false; btn.textContent='Купить'; 
         }));
 
-        const purchaseBtn = document.getElementById('purchase-btn');
-        if(purchaseBtn) {
-            purchaseBtn.addEventListener('click', async () => {
-                const m = document.querySelector('input[name="model-selection"]:checked').value;
-                if(m !== 'pro') return alert('Это бесплатно!');
-                const lim = document.querySelector('input[name="limit-selection"]:checked').value.replace('k','') * 1000;
-                document.getElementById('modal-state-waiting').classList.remove('hidden');
-                document.getElementById('modal-state-default').classList.add('hidden');
-                const reqRef = push(ref(db, 'purchaseRequests'));
-                await set(reqRef, { userId: currentUserId, userEmail: auth.currentUser.email, model: m, limit: lim, status: 'pending', timestamp: serverTimestamp() });
-                onValue(reqRef, s => {
-                    const d = s.val(); if(!d) return;
-                    if(d.status === 'confirmed') { alert('Подписка активна!'); window.location.hash='#ai'; modelsModal.classList.add('hidden'); window.location.reload(); }
-                });
+        document.getElementById('purchase-btn').addEventListener('click', async () => {
+            const pack = document.querySelector('input[name="limit-selection"]:checked').value; // 100, 300, 500
+            const reqRef = push(ref(db, 'purchaseRequests'));
+            await set(reqRef, { userId: currentUserId, userEmail: auth.currentUser.email, pack: parseInt(pack), status: 'pending', timestamp: serverTimestamp() });
+            
+            document.getElementById('modal-state-waiting').classList.remove('hidden');
+            document.getElementById('modal-state-default').classList.add('hidden');
+            
+            onValue(reqRef, s => {
+                const d = s.val(); if(!d) return;
+                if(d.status === 'confirmed') { alert('Успешно!'); window.location.reload(); }
             });
-        }
+        });
 
-        const tabReqBtn = document.getElementById('tab-requests-btn');
-        const tabMgmtBtn = document.getElementById('tab-management-btn');
-        const tabReqContent = document.getElementById('tab-requests-content');
-        const tabMgmtContent = document.getElementById('tab-management-content');
-
-        if(tabReqBtn && tabMgmtBtn) {
-            tabReqBtn.onclick = () => {
-                tabReqContent.classList.remove('hidden'); tabMgmtContent.classList.add('hidden');
-                tabReqBtn.classList.add('border-b-2', 'border-blue-500', 'bg-white/5', 'text-white'); tabReqBtn.classList.remove('text-gray-400');
-                tabMgmtBtn.classList.remove('border-b-2', 'border-blue-500', 'bg-white/5', 'text-white'); tabMgmtBtn.classList.add('text-gray-400');
-            };
-            tabMgmtBtn.onclick = () => {
-                tabReqContent.classList.add('hidden'); tabMgmtContent.classList.remove('hidden');
-                tabMgmtBtn.classList.add('border-b-2', 'border-blue-500', 'bg-white/5', 'text-white'); tabMgmtBtn.classList.remove('text-gray-400');
-                tabReqBtn.classList.remove('border-b-2', 'border-blue-500', 'bg-white/5', 'text-white'); tabReqBtn.classList.add('text-gray-400');
-            };
-        }
-
+        // Admin
         function setupAdminListeners() {
             onValue(ref(db, 'purchaseRequests'), s => {
                 const list = document.getElementById('admin-requests-list');
@@ -562,22 +571,26 @@
                     if(r.status !== 'pending') return;
                     const div = document.createElement('div');
                     div.className = 'glass p-4 rounded-xl flex justify-between items-center border-white/10';
-                    div.innerHTML = `<div><p class="font-bold text-white">${r.userEmail}</p><p class="text-xs text-blue-400">PRO ${r.limit}</p></div>
-                        <div class="space-x-2"><button class="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded-lg text-sm transition" onclick="window.confirmReq('${rid}','${r.userId}','${r.model}',${r.limit})">✔</button><button class="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded-lg text-sm transition" onclick="window.rejectReq('${rid}')">✖</button></div>`;
+                    div.innerHTML = `<div><p class="font-bold text-white">${r.userEmail}</p><p class="text-xs text-blue-400">+${r.pack} сообщений</p></div>
+                        <div class="space-x-2"><button class="bg-green-600 px-3 py-1 rounded" onclick="window.confirmReq('${rid}','${r.userId}',${r.pack})">✔</button><button class="bg-red-600 px-3 py-1 rounded" onclick="window.rejectReq('${rid}')">✖</button></div>`;
                     list.appendChild(div);
                 });
             });
         }
 
-        window.adminCrashServer = async (reason) => {
-            if(confirm(`ПОЛОЖИТЬ сервер с причиной: "${reason}"?`)) await set(ref(db, 'serverStatus'), { isOnline: false, reason: reason });
-        };
-        window.adminDisconnectServer = async () => {
-            if(confirm('Отключить доступ?')) await set(ref(db, 'serverStatus'), { isOnline: false, reason: 'Ошибка подключения к серверу. Повторите попытку позже.' });
-        };
+        window.adminCrashServer = async (reason) => { if(confirm(`ПОЛОЖИТЬ?`)) await set(ref(db, 'serverStatus'), { isOnline: false, reason: reason }); };
+        window.adminDisconnectServer = async () => { if(confirm('Block?')) await set(ref(db, 'serverStatus'), { isOnline: false, reason: 'Connection Error' }); };
         window.adminReviveServer = async () => { await set(ref(db, 'serverStatus'), { isOnline: true, reason: '' }); };
 
-        window.confirmReq = async (rid, uid, model, limit) => { await set(ref(db, `users/${uid}/subscription`), { status: 'active', model, limit }); await update(ref(db, `purchaseRequests/${rid}`), { status: 'confirmed' }); };
+        window.confirmReq = async (rid, uid, pack) => { 
+            // Get current credits first
+            const snap = await get(ref(db, `users/${uid}/subscription`));
+            const current = snap.val() || { ai_credits: 0 };
+            const newCredits = (current.ai_credits || 0) + pack;
+            
+            await set(ref(db, `users/${uid}/subscription`), { type: 'pro', ai_credits: newCredits, last_reset: 0 }); 
+            await update(ref(db, `purchaseRequests/${rid}`), { status: 'confirmed' }); 
+        };
         window.rejectReq = async (rid) => await update(ref(db, `purchaseRequests/${rid}`), { status: 'canceled' });
 
     </script>
