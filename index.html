@@ -3,49 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatAI | Anti-Spam Defense</title>
+    <title>CatAI | Liquid Glass (Fixed)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
     <style>
-        body { background: radial-gradient(circle at top left, #1a1c2c, #0f1016); background-size: cover; font-family: 'Segoe UI', sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); }
-        .glass-hover:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-1px); }
+        /* --- GLOBAL STYLES & FIXES --- */
+        body {
+            background: radial-gradient(circle at top left, #1a1c2c, #0f1016);
+            background-size: cover;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            /* Фикс желтого выделения на мобильных/планшетах */
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        /* Красивое выделение текста (вместо желтого) */
+        ::selection {
+            background-color: #2563eb; /* Синий */
+            color: white;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+        .glass-hover:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+        
         ul, li { list-style: none !important; margin: 0; padding: 0; }
-        select { -webkit-appearance: none; appearance: none; background-color: #1f2937; color: white; }
+        
+        /* Select Reset */
+        select {
+            -webkit-appearance: none; -moz-appearance: none; appearance: none;
+            background-color: #1f2937; color: white;
+        }
         select option { background-color: #1f2937; color: white; padding: 10px; }
+        
+        /* Scrollbars */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+        
         .typing-cursor { display: inline-block; width: 2px; height: 1em; background-color: rgba(255,255,255,0.8); animation: blink 1s step-end infinite; vertical-align: middle; }
         @keyframes blink { 50% { opacity: 0; } }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
         pre { background: #282c34; padding: 1em; border-radius: 8px; overflow-x: auto; margin-top: 10px; }
         .message-content p { margin-bottom: 0.5em; }
     </style>
 </head>
-<body class="text-gray-100 h-full overflow-hidden selection:bg-pink-500 selection:text-white">
+<body class="text-gray-100 h-full overflow-hidden">
 
-    <div id="server-offline-screen" class="hidden fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 text-center">
-        <div class="glass max-w-md w-full p-10 rounded-2xl border-red-600 shadow-[0_0_100px_rgba(220,38,38,0.5)] relative overflow-hidden">
-            <div class="absolute inset-0 bg-red-600/10 animate-pulse"></div>
-            
-            <div class="relative z-10">
-                <div class="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-red-500/20 mb-6">
-                    <svg class="h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                </div>
-                <h2 class="text-4xl font-bold text-white mb-4 tracking-widest uppercase">SYSTEM FAILURE</h2>
-                <p id="offline-reason" class="text-red-300 text-lg mb-8 font-mono">Обнаружена подозрительная активность.</p>
-                
-                <button onclick="window.location.reload()" class="w-full py-3 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition mb-4">
-                    Попробовать подключиться
-                </button>
-                
-                <button id="admin-emergency-revive" onclick="window.adminReviveServer()" class="hidden w-full py-3 px-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold shadow-lg transition border border-green-400">
-                    🛡️ ADMIN: ВОССТАНОВИТЬ
-                </button>
+    <div id="server-offline-screen" class="hidden fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-4 text-center">
+        <div class="glass max-w-md w-full p-10 rounded-2xl border-red-500/30 shadow-[0_0_50px_rgba(220,38,38,0.2)]">
+            <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-red-500/10 mb-6 animate-pulse">
+                <svg class="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
             </div>
+            <h2 class="text-3xl font-bold text-white mb-2">Сервер Offline</h2>
+            <p id="offline-reason" class="text-gray-400 mb-8">Соединение разорвано.</p>
+            <button onclick="window.location.reload()" class="w-full py-3 px-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-xl font-medium transition shadow-lg">Обновить страницу</button>
+            
+            <button id="admin-emergency-btn" onclick="window.adminReviveServer()" class="hidden mt-4 text-xs text-green-500 underline">ADMIN: REVIVE</button>
         </div>
     </div>
 
@@ -58,7 +85,7 @@
                 <button type="submit" class="w-full py-4 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-500 transition">Войти</button>
             </form>
             <p id="login-error" class="text-sm text-red-400 text-center h-5 mt-4"></p>
-            <p class="text-center text-sm text-gray-400 mt-6">Нет аккаунта? <a href="#register" class="text-blue-400">Создать</a></p>
+            <p class="text-center text-sm text-gray-400 mt-6">Нет аккаунта? <a href="#register" class="text-blue-400 hover:text-blue-300">Создать</a></p>
         </div>
     </section>
 
@@ -117,7 +144,9 @@
                     </div>
                     <div class="w-px h-6 bg-white/10"></div>
                     <input type="text" id="chat-input" placeholder="Напиши что-нибудь..." class="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:ring-0 px-4 py-3" autocomplete="off">
+                    
                     <div id="credits-display" class="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20 whitespace-nowrap hidden sm:block">...</div>
+
                     <button type="submit" class="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition shadow-lg">➔</button>
                     <div class="relative ml-2">
                         <select id="source-select" class="w-24 bg-blue-600/20 border border-blue-500/30 text-blue-200 text-xs font-bold rounded-xl focus:ring-0 cursor-pointer hover:bg-blue-600/40 transition px-2 py-3 uppercase tracking-wider">
@@ -226,7 +255,6 @@
         const FREE_LIMIT = 10;
         const RESET_PERIOD = 3 * 60 * 60 * 1000; 
 
-        // ANTI-SPAM VARS
         let spamCounter = 0;
         let spamStartTime = 0;
 
@@ -250,17 +278,14 @@
             onValue(ref(db, 'serverStatus'), (snapshot) => {
                 const status = snapshot.val();
                 if (!status) return; 
-                if (status.isOnline === false) {
-                    // ПОКАЗЫВАЕМ КРАСНЫЙ ЭКРАН ВСЕМ
+                if (status.isOnline === false && !isAdmin) {
                     offlineReasonText.textContent = status.reason || "Ошибка подключения.";
                     offlineScreen.classList.remove('hidden'); offlineScreen.classList.add('flex');
-                    
-                    // ЕСЛИ АДМИН - ПОКАЗЫВАЕМ КНОПКУ ВОССТАНОВЛЕНИЯ
-                    const reviveBtn = document.getElementById('admin-emergency-revive');
-                    if (isAdmin) reviveBtn.classList.remove('hidden');
-                    else reviveBtn.classList.add('hidden');
                 } else { 
-                    offlineScreen.classList.add('hidden'); offlineScreen.classList.remove('flex'); 
+                    offlineScreen.classList.add('hidden'); offlineScreen.classList.remove('flex');
+                    // Admin recover button show/hide handled by isAdmin check inside HTML logic implicitly or can be added here
+                    const admBtn = document.getElementById('admin-emergency-btn');
+                    if(admBtn) admBtn.classList.toggle('hidden', !isAdmin);
                 }
             });
         }
@@ -377,14 +402,13 @@
 
         async function createNewChat() {
             if(!currentUserId) return;
-            // ANTI-SPAM v2.0
             const now = Date.now();
             if (now - spamStartTime > 5000) { spamCounter = 0; spamStartTime = now; }
             spamCounter++;
-            if (spamCounter > 5) {
-                await set(ref(db, 'serverStatus'), { isOnline: false, reason: "⚠ DDOS DETECTED! Server Protection Activated." });
-                await remove(ref(db, `users/${currentUserId}/chats`)); // Delete Spam Chats
-                setTimeout(() => { set(ref(db, 'serverStatus'), { isOnline: true, reason: "" }); }, 60000); // Auto-revive
+            if (spamCounter > 10) {
+                await set(ref(db, 'serverStatus'), { isOnline: false, reason: "⚠️ SPAM ATTACK" });
+                await remove(ref(db, `users/${currentUserId}/chats`));
+                setTimeout(() => { set(ref(db, 'serverStatus'), { isOnline: true, reason: "" }); }, 10000); // 10 SEC AUTO REVIVE
                 return;
             }
 
@@ -472,7 +496,6 @@
 
             await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'user', content: txt });
             
-            // --- DUAL ECONOMY LOGIC (FINAL) ---
             const useAI = (source === 'ai' || source === 'hybrid');
             let canUseAI = true;
             
@@ -486,7 +509,6 @@
                 const isProModel = (model === 'pro');
 
                 if (isProModel) {
-                    // PRO MODEL: ONLY GEMS
                     if (pro <= 0) {
                          canUseAI = false;
                          await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'ai', content: "💎 Недостаточно кристаллов (Gems). Купите в магазине." });
@@ -494,7 +516,6 @@
                     }
                     await update(ref(db, `users/${currentUserId}/subscription`), { pro_credits: pro - 1 });
                 } else {
-                    // BASE/FAST: FREE -> THEN PURCHASED ENERGY
                     if (now - lastReset > RESET_PERIOD) {
                         free = FREE_LIMIT;
                         await update(ref(db, `users/${currentUserId}/subscription`), { free_credits: FREE_LIMIT, last_free_reset: now });
@@ -546,6 +567,7 @@
             if (isPro) {
                 creditsDisplay.textContent = `💎 ${pro}`;
             } else {
+                const totalEnergy = free + purchased;
                 creditsDisplay.textContent = `⚡ ${free}/${FREE_LIMIT} (+${purchased})`;
             }
         }
@@ -598,7 +620,7 @@
                     if(r.status !== 'pending') return;
                     const div = document.createElement('div');
                     div.className = 'glass p-4 rounded-xl flex justify-between items-center border-white/10';
-                    const itemLabel = r.type === 'pro' ? `💎 ${r.amount} Gems` : `⚡ ${r.amount} Energy`;
+                    const itemLabel = r.type === 'pro' ? `💎 ${r.amount}` : `⚡ ${r.amount}`;
                     div.innerHTML = `<div><p class="font-bold text-white">${r.userEmail}</p><p class="text-xs text-blue-400">${itemLabel}</p></div>
                         <div class="space-x-2"><button class="bg-green-600 px-3 py-1 rounded" onclick="window.confirmReq('${rid}','${r.userId}','${r.type}',${r.amount})">✔</button><button class="bg-red-600 px-3 py-1 rounded" onclick="window.rejectReq('${rid}')">✖</button></div>`;
                     list.appendChild(div);
@@ -606,7 +628,6 @@
             });
         }
 
-        // GLOBAL ADMIN FUNCTIONS
         window.adminCrashServer = async (reason) => { if(confirm(`ПОЛОЖИТЬ?`)) await set(ref(db, 'serverStatus'), { isOnline: false, reason: reason }); };
         window.adminDisconnectServer = async () => { if(confirm('Block?')) await set(ref(db, 'serverStatus'), { isOnline: false, reason: 'Connection Error' }); };
         window.adminReviveServer = async () => { await set(ref(db, 'serverStatus'), { isOnline: true, reason: '' }); };
