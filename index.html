@@ -3,66 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatAI | Ultimate Color</title>
+    <title>CatAI | Ultimate Memory</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
     <style>
-        /* === ТЕХНИЧЕСКИЕ ФИКСЫ (Чтобы не бесило) === */
-        
-        /* 1. Убираем мигание при нажатии на мобилках */
+        /* === СТИЛИ === */
         * { -webkit-tap-highlight-color: transparent !important; outline: none !important; }
-
-        /* 2. Исправляем желтый фон автозаполнения (делаем его темным) */
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover, 
-        input:-webkit-autofill:focus, 
-        input:-webkit-autofill:active {
+        
+        input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, input:-webkit-autofill:active {
             -webkit-box-shadow: 0 0 0 1000px #0f1016 inset !important;
             -webkit-text-fill-color: white !important;
             transition: background-color 5000s ease-in-out 0s;
-            caret-color: white;
         }
 
-        /* 3. Красивое выделение текста (Синее, а не желтое) */
         ::selection { background-color: #3b82f6 !important; color: white !important; }
         ::-moz-selection { background-color: #3b82f6 !important; color: white !important; }
 
-        /* === ДИЗАЙН === */
-        body {
-            background: radial-gradient(circle at top left, #1a1c2c, #0f1016);
-            background-size: cover;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-        }
-        .glass-hover:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
-        }
+        body { background: radial-gradient(circle at top left, #1a1c2c, #0f1016); background-size: cover; font-family: 'Segoe UI', sans-serif; }
+        
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); }
+        .glass-hover:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-1px); }
+        
         ul, li { list-style: none !important; margin: 0; padding: 0; }
         select { -webkit-appearance: none; appearance: none; background-color: #1f2937; color: white; }
         select option { background-color: #1f2937; color: white; padding: 10px; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+        
         .typing-cursor { display: inline-block; width: 2px; height: 1em; background-color: rgba(255,255,255,0.8); animation: blink 1s step-end infinite; vertical-align: middle; }
         @keyframes blink { 50% { opacity: 0; } }
-        .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         pre { background: #282c34; padding: 1em; border-radius: 8px; overflow-x: auto; margin-top: 10px; }
         .message-content p { margin-bottom: 0.5em; }
-        
-        /* Табы в админке */
-        .tab-active { border-bottom: 2px solid #3b82f6; color: white; background: rgba(255,255,255,0.05); }
-        .tab-inactive { color: #9ca3af; border-bottom: 2px solid transparent; }
     </style>
 </head>
 <body class="text-gray-100 h-full overflow-hidden selection:bg-pink-500 selection:text-white">
@@ -71,24 +46,21 @@
         <div class="glass max-w-md w-full p-10 rounded-2xl border-red-500/30 shadow-lg">
             <h2 class="text-3xl font-bold text-white mb-2">Сервер Offline</h2>
             <p id="offline-reason" class="text-gray-400 mb-8">Технические работы.</p>
-            <button onclick="window.location.reload()" class="w-full py-3 px-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-500 transition">Обновить</button>
-            <button id="admin-emergency-btn" onclick="window.adminReviveServer()" class="hidden mt-6 text-xs text-green-500 underline cursor-pointer hover:text-green-400">ВКЛЮЧИТЬ (ADMIN)</button>
+            <button onclick="window.location.reload()" class="w-full py-3 px-4 bg-blue-600 text-white rounded-xl font-bold">Обновить</button>
+            <button id="admin-emergency-btn" onclick="window.adminReviveServer()" class="hidden mt-6 text-xs text-green-500 underline cursor-pointer">ВКЛЮЧИТЬ (ADMIN)</button>
         </div>
     </div>
 
     <section id="login" class="page flex items-center justify-center h-full relative">
-        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>
         <div class="glass w-full max-w-md p-10 rounded-3xl shadow-2xl z-10">
-            <h2 class="text-4xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-2">CatAI</h2>
-            <p class="text-center text-gray-400 mb-8">Вход в систему</p>
+            <h2 class="text-4xl font-bold text-center text-white mb-8">CatAI Login</h2>
             <form id="login-form" class="space-y-5">
-                <input type="email" id="login-email" placeholder="Email" class="w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-white transition focus:border-blue-500" required>
-                <input type="password" id="login-password" placeholder="Пароль" class="w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-white transition focus:border-blue-500" required>
-                <button type="submit" class="w-full py-4 font-bold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg hover:shadow-blue-500/30 rounded-xl transition transform active:scale-95">Войти</button>
+                <input type="email" id="login-email" placeholder="Email" class="w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-white focus:border-blue-500 transition" required>
+                <input type="password" id="login-password" placeholder="Пароль" class="w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-white focus:border-blue-500 transition" required>
+                <button type="submit" class="w-full py-4 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-500 transition shadow-lg">Войти</button>
             </form>
             <p id="login-error" class="text-sm text-red-400 text-center h-5 mt-4"></p>
-            <p class="text-center text-sm text-gray-400 mt-6">Нет аккаунта? <a href="#register" class="text-blue-400 hover:text-blue-300 cursor-pointer">Создать</a></p>
+            <p class="text-center text-sm text-gray-400 mt-6">Нет аккаунта? <a href="#register" class="text-blue-400 hover:text-blue-300">Создать</a></p>
         </div>
     </section>
 
@@ -96,13 +68,13 @@
         <div class="glass w-full max-w-md p-10 rounded-3xl shadow-2xl z-10">
             <h2 class="text-3xl font-bold text-center text-white mb-8">Регистрация</h2>
             <form id="register-form" class="space-y-5">
-                <input type="email" id="register-email" placeholder="Email" class="w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-white transition focus:border-blue-500" required>
-                <input type="password" id="register-password" placeholder="Пароль" class="w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-white transition focus:border-blue-500" required>
-                <input type="password" id="register-password-confirm" placeholder="Повтор пароля" class="w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-white transition focus:border-blue-500" required>
-                <button type="submit" class="w-full py-4 font-bold text-white bg-gradient-to-r from-pink-600 to-orange-600 hover:shadow-lg hover:shadow-pink-500/30 rounded-xl transition transform active:scale-95">Создать аккаунт</button>
+                <input type="email" id="register-email" placeholder="Email" class="w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-white focus:border-blue-500 transition" required>
+                <input type="password" id="register-password" placeholder="Пароль" class="w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-white focus:border-blue-500 transition" required>
+                <input type="password" id="register-password-confirm" placeholder="Повтор пароля" class="w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-white focus:border-blue-500 transition" required>
+                <button type="submit" class="w-full py-4 font-bold text-white bg-gradient-to-r from-pink-600 to-orange-600 rounded-xl transition shadow-lg">Создать аккаунт</button>
             </form>
             <p id="register-error" class="text-sm text-red-400 text-center h-5 mt-4"></p>
-            <p class="text-center text-sm text-gray-400 mt-6">Уже есть? <a href="#login" class="text-pink-400 hover:text-pink-300 cursor-pointer">Войти</a></p>
+            <p class="text-center text-sm text-gray-400 mt-6">Уже есть? <a href="#login" class="text-pink-400">Войти</a></p>
         </div>
     </section>
 
@@ -263,7 +235,6 @@
             const srvBtn = document.getElementById('tab-management-btn');
             const reqContent = document.getElementById('tab-requests-content');
             const srvContent = document.getElementById('tab-management-content');
-
             if (tab === 'requests') {
                 reqContent.classList.remove('hidden'); srvContent.classList.add('hidden');
                 reqBtn.classList.add('border-b-2', 'border-blue-500', 'text-white'); reqBtn.classList.remove('text-gray-400');
@@ -292,17 +263,40 @@
             });
         }
 
-        async function askAI(userMessage, mode) {
+        // === AI API (WITH MEMORY & CENSORSHIP) ===
+        async function askAI(userMessage, mode, history = []) {
             const url = "https://api.groq.com/openai/v1/chat/completions";
             let systemContent = "Ты — CatAI. Отвечай на русском.";
             if (mode === 'dumb') systemContent += " Отвечай кратко. НЕ ПИШИ КОД. Говори что код только в PRO.";
             else systemContent += " Ты эксперт. Пиши код красиво в Markdown.";
             systemContent += "\nЕсли мат - не отвечай.";
 
+            // --- CONSTRUCTING HISTORY ---
+            const apiMessages = [{ role: "system", content: systemContent }];
+            
+            // Add context (last 15 messages)
+            // We skip the last one if it's the current user message to avoid duplications if passed raw
+            const recentHistory = history.slice(-15);
+            recentHistory.forEach(msg => {
+                apiMessages.push({
+                    role: msg.role === 'ai' ? 'assistant' : 'user',
+                    content: msg.content
+                });
+            });
+
+            // Ensure the current question is last
+            // (If we extracted history from DB after pushing user msg, the last msg IS the user message.
+            //  So we check: if last history msg == userMessage, don't add again. Otherwise add.)
+            const lastHistoryMsg = recentHistory[recentHistory.length - 1];
+            if (!lastHistoryMsg || lastHistoryMsg.content !== userMessage) {
+                 apiMessages.push({ role: "user", content: userMessage });
+            }
+
             const requestBody = {
                 model: "llama-3.3-70b-versatile",
-                messages: [{ role: "system", content: systemContent }, { role: "user", content: userMessage }]
+                messages: apiMessages
             };
+
             try {
                 const response = await fetch(url, {
                     method: "POST",
@@ -443,12 +437,7 @@
         function renderChat(chat) {
             chatMessages.innerHTML = '';
             if(!chat || !chat.messages) return;
-            
-            // PREPARE MESSAGES
-            const messages = Object.values(chat.messages || {});
-            // RENDER LAST 15 FOR CONTEXT TO AI (BUT ALL TO UI)
-            
-            messages.forEach(msg => appendMessageToUI(msg.role, msg.content));
+            Object.values(chat.messages).forEach(msg => appendMessageToUI(msg.role, msg.content));
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
@@ -499,8 +488,16 @@
             const source = document.getElementById('source-select').value;
             document.getElementById('chat-input').value = '';
 
+            // 1. PUSH USER MSG
             await push(ref(db, `users/${currentUserId}/chats/${cid}/messages`), { role: 'user', content: txt });
             
+            // 2. PREPARE CONTEXT (History for AI)
+            // We fetch fresh state just in case, but we can use local userChatsData
+            const currentChat = userChatsData[cid];
+            const history = currentChat ? Object.values(currentChat.messages || {}) : [];
+            // Add the user message we just pushed (optimistically) if it's not there yet
+            // (Usually Firebase is fast, but let's be safe: askAI handles the "last message check")
+
             // --- ECONOMY ---
             const useAI = (source === 'ai' || source === 'hybrid');
             let canUseAI = true;
@@ -547,11 +544,11 @@
                 const local = findBestMatch(txt, knowledgeBase);
                 text = local || "В базе нет ответа.";
             } else if (source === 'ai') {
-                 if(canUseAI) text = await askAI(txt, aiMode);
+                 if(canUseAI) text = await askAI(txt, aiMode, history); // PASS HISTORY
             } else {
                 const local = findBestMatch(txt, knowledgeBase);
                 if (local) text = local;
-                else if (canUseAI) text = await askAI(txt, aiMode);
+                else if (canUseAI) text = await askAI(txt, aiMode, history); // PASS HISTORY
                 else text = "Лимит исчерпан, а в базе ответа нет.";
             }
 
